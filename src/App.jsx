@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import FitchBox from "./fitchForm.jsx";
+import FitchBox from "./components/FitchBox.jsx";
 import Paper from '@mui/material/Paper';
 
 function CustomTabPanel(props) {
@@ -45,8 +45,8 @@ function App() {
     };
 
   return (
-    <>
-      <h1>WebFitch</h1>
+    <Box sx={{width:'100%'}}>
+        <h1>WebFitch</h1>
         <Paper sx={{ width: '100%' }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
@@ -58,7 +58,7 @@ function App() {
             </CustomTabPanel>
 
         </Paper>
-    </>
+    </Box>
   )
 }
 
