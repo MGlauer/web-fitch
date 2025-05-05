@@ -108,7 +108,10 @@ export class BinarySentence extends Sentence {
     }
 
     get text() {
-        return this.associativeParts.map((x) => x.text).join(this.op)
+        if(this.isAssociative)
+            return this.associativeParts.map((x) => x.text).join(this.op)
+        else
+            return `${this.left.text}${this.op}${this.right.text}`
     }
 
     substitute(vari, cons) {
@@ -174,6 +177,10 @@ export class PropAtoms extends Sentence {
 
     get text() {
         return this.name
+    }
+
+    equals(other){
+        return this.name === other.name
     }
 }
 

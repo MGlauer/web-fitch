@@ -26,8 +26,11 @@ function readLinesText(text) {
                 let a = Number(v[0]), b = Number(v[1])
                 if (!v[0] || !v[1] || isNaN(a) || isNaN(b))
                     return {error: "Subproof references need to have shape n-m", text: text}
-                vs[i] = [a, b]
+                vs[i] = [a-1, b-1]
             }
+        }
+        else {
+            vs[i] = Number(vs[i])-1
         }
     }
     return {text: text, processed: vs}

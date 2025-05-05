@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import ProofBox from "./ProofBox.jsx"
 import {SentenceLine} from "../fitch/proofstructure.js";
+import {RuleError} from "../fitch/rules.js"
 
 export default function FitchBox() {
     const [premisesEnd, setPremisesEnd] = React.useState(0);
@@ -34,19 +35,6 @@ export default function FitchBox() {
         }
     }
 
-    function isLineAvailableIn(referencedLineIndex,targetLineIndex){
-        const referencedLine = lines[referencedLineIndex];
-        const layer = referencedLine.level;
-        for(let i=referencedLineIndex; i<lines.length; i++){
-            if (lines[i].level < layer || ((layer === lines[i].level) && lines[i].isAssumption)) {
-                return false
-            }
-            if(i === targetLineIndex)
-                return true
-        }
-        return false
-    }
-
     function updateLine(i) {
         return ((newLine) => {
             let newLines = [...lines]
@@ -68,7 +56,10 @@ export default function FitchBox() {
                         newLine.isValid = true;
 
                     } catch (error) {
-                        newLine.error = error
+                        if(error instanceof  RuleError)
+                            newLine.error = error.message
+                        else
+                            throw error
                     }
                 }
                 setLines([...lines])

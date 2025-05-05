@@ -1,5 +1,5 @@
 import {BinaryOp, BinarySentence, Falsum, UnaryOp, UnarySentence} from './structure.js'
-import {assertAvailableIn, getLine, getSubProof, register, Rule} from '../rules.js'
+import {assertAvailableIn, getLine, getSubProof, register,RuleError,Rule} from '../rules.js'
 
 class Assumption extends Rule {
     static label = "Assumption";
@@ -7,10 +7,11 @@ class Assumption extends Rule {
         register(this);
     }
 
-    static check(proof, lines, target, target_line) {
+    static _check(proof, lines, target, target_line) {
     }
 }
 
+// Reit: Reiteration of line
 class Reiteration extends Rule {
 
     static label = "Reit";
@@ -18,19 +19,16 @@ class Reiteration extends Rule {
         register(this);
     }
 
-// Reit: Reiteration of line
-    static check(proof, lines, target, target_line) {
-        var flag = '[ERROR applying ' + this.label + ' to lines ' + lines.join(',') + ']: ';
 
+    static _check(proof, lines, target, target_line) {
         if (lines.length != 1) {
-            throw flag + 'Rule must be applied to one line.';
+            throw new RuleError('Rule must be applied to one line.');
         }
         let bi = lines[0];
         let b = getLine(proof, bi)
-        if (target.equals(b)) {
-            throw flag + 'The formula being derived must be the same as the formula on the rule line.';
+        if (!target.equals(b)) {
+            throw new RuleError('The formula being derived must be the same as the formula on the rule line.');
         }
-        assertAvailableIn(proof, target_line)
     }
 }
 
@@ -43,7 +41,7 @@ class ConjunctionIntro extends Rule {
         register(this);
     }
 
-    static check(proof, lines, target, target_line) {
+    static _check(proof, lines, target, target_line) {
         var flag = '[ERROR applying ' + this.label + ' to lines ' + lines.join(',') + ']: ';
         if (lines.length != 2) {
             throw flag + 'Rule must be applied to two lines.';
@@ -74,7 +72,7 @@ class ConjunctionElim extends Rule {
         register(this);
     }
 
-    static check(proof, lines, target, target_line) {
+    static _check(proof, lines, target, target_line) {
 
         var flag = '[ERROR applying ' + this.label + ' to lines ' + lines.join(',') + ']: ';
         if (lines.length != 1) {
@@ -114,7 +112,7 @@ class ConditionalIntro extends Rule {
         register(this);
     }
 
-    static check(proof, lines, refLines, target, target_line) {
+    static _check(proof, lines, refLines, target, target_line) {
         var flag = '[ERROR applying ' + this.label + ' to lines ' + refLines.join(',') + ']: ';
 
         if (!(refLines.length == 2 || lines[1] instanceof Array)) {
@@ -150,7 +148,7 @@ class ConditionalElim extends Rule {
         register(this);
     }
 
-    static check(proof, lines, target, target_line) {
+    static _check(proof, lines, target, target_line) {
         var flag = '[ERROR applying ' + this.label + ' to lines ' + lines.join(',') + ']: ';
 
         let ai, bi = lines;
@@ -182,7 +180,7 @@ class DisjunctionIntro extends Rule {
         register(this);
     }
 
-    static check(proof, lines, target, target_line) {
+    static _check(proof, lines, target, target_line) {
         var flag = '[ERROR applying ' + this.label + ' to line ' + lines.join(',') + ']: '
 
         if (lines.length != 1) {
@@ -211,7 +209,7 @@ class DisjunctionElim extends Rule {
         register(this);
     }
 
-    static check(proof, lines, target, target_line) {
+    static _check(proof, lines, target, target_line) {
         var flag = '[ERROR applying ' + this.label + ' to lines ' + lines.join(',') + ']: ';
 
         if (lines.length != 7 || lines[2] != "-" || lines[5] != "-") {
@@ -257,7 +255,7 @@ class NegationIntro extends Rule {
         register(this);
     }
 
-    static check(proof, lines, target, target_line) {
+    static _check(proof, lines, target, target_line) {
         let flag = '[ERROR applying ' + this.label + ' to lines ' + lines.join(',') + ']: ';
 
         if (lines.length != 3 || lines[1] != "-") {
@@ -291,7 +289,7 @@ class FalsumIntro extends Rule {
         register(this);
     }
 
-    static check(proof, lines, target, target_line) {
+    static _check(proof, lines, target, target_line) {
         var flag = '[ERROR applying ' + this.label + ' to lines ' + lines.join(',') + ']: ';
 
 
@@ -321,7 +319,7 @@ class NegationElim extends Rule {
 
     static label = String.fromCharCode(172) + "-Elim";
 
-    static check(proof, lines, target, target_line) {
+    static _check(proof, lines, target, target_line) {
         var flag = '[ERROR applying ' + this.label + ' to line ' + lines.join(',') + ']: ';
 
         if (lines.length != 1) {
@@ -345,7 +343,7 @@ class FalsumElim extends Rule {
     }
     static label = "\u22A5-Elim";
 
-    static check(proof, lines, target, target_line) {
+    static _check(proof, lines, target, target_line) {
         var flag = '[ERROR applying ' + this.label + ' to line ' + lines.join(',') + ']: ';
 
         if (lines.length != 1) {
@@ -369,7 +367,7 @@ class BiconditionalIntro extends Rule {
     }
     static label = "\u2194-Intro";
 
-    static check(proof, lines, target, target_line) {
+    static _check(proof, lines, target, target_line) {
         var flag = '[ERROR applying ' + this.label + ' to lines ' + lines.join(',') + ']: ';
 
         if (lines.length != 6 || lines[1] != "-" || lines[4] != "-") {
@@ -413,7 +411,7 @@ class BiconditionalElim extends Rule {
     }
     static label = "\u2194-Elim";
 
-    static check(proof, lines, target, target_line) {
+    static _check(proof, lines, target, target_line) {
         var flag = '[ERROR applying ' + this.label + ' to lines ' + lines.join(',') + ']: '
 
         if (lines.length != 2) {
