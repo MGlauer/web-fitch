@@ -12,7 +12,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import CheckIcon from "@mui/icons-material/Check";
 import {IconButton} from "@mui/material";
-
+import * as Rules from "../fitch/prop/rules.js";
 
 function readLinesText(text) {
     let vs = text.split(",");

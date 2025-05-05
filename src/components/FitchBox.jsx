@@ -34,6 +34,19 @@ export default function FitchBox() {
         }
     }
 
+    function isLineAvailableIn(referencedLineIndex,targetLineIndex){
+        const referencedLine = lines[referencedLineIndex];
+        const layer = referencedLine.level;
+        for(let i=referencedLineIndex; i<lines.length; i++){
+            if (lines[i].level < layer || ((layer === lines[i].level) && lines[i].isAssumption)) {
+                return false
+            }
+            if(i === targetLineIndex)
+                return true
+        }
+        return false
+    }
+
     function updateLine(i) {
         return ((newLine) => {
             let newLines = [...lines]
@@ -41,7 +54,7 @@ export default function FitchBox() {
             setLines(newLines)
         });
     }
-
+    console.log(lines)
     return (
         <Box>
             <ProofBox premises={premises} proofLines={proofLines} addLine={addLine}
@@ -49,7 +62,7 @@ export default function FitchBox() {
                       premisesEnd={premisesEnd}></ProofBox>
             <Button onClick={() => {
                 for (let i = premisesEnd; i < lines.length; i++) {
-                    let newLine = new SentenceLine(lines[i].sentence, lines[i].justification);
+                    let newLine = lines[i]
                     try {
                         newLine.check(lines, i)
                         newLine.isValid = true;

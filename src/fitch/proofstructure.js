@@ -1,5 +1,5 @@
 export class SentenceLine {
-    constructor(sentence, justification, level = 0, isAssumption = false) {
+    constructor(sentence, justification, level, isAssumption = false) {
         this.sentence = sentence;
         this.justification = justification
         this.level = level
