@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import * as React from 'react'
 import './App.css'
-import * as React from 'react';
 import PropTypes from 'prop-types';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -9,7 +8,7 @@ import FitchBox from "./components/FitchBox.jsx";
 import Paper from '@mui/material/Paper';
 
 function CustomTabPanel(props) {
-    const { children, value, index, ...other } = props;
+    const {children, value, index, ...other} = props;
 
     return (
         <div
@@ -19,7 +18,7 @@ function CustomTabPanel(props) {
             aria-labelledby={`simple-tab-${index}`}
             {...other}
         >
-            {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+            {value === index && <Box sx={{p: 3}}>{children}</Box>}
         </div>
     );
 }
@@ -44,24 +43,23 @@ function App() {
         setValue(newValue);
     };
 
-  return (
-    <Box sx={{width:'100%'}}>
-        <h1>WebFitch</h1>
-        <Paper sx={{ width: '100%' }}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-                    <Tab label="Proof" {...a11yProps(0)} />
-                </Tabs>
-            </Box>
-            <CustomTabPanel value={value} index={0}>
-                <FitchBox />
-            </CustomTabPanel>
+    return (
+        <Box sx={{width: '100%'}}>
+            <h1>WebFitch</h1>
+            <Paper sx={{width: '100%'}}>
+                <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                    <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
+                        <Tab label="Proof" {...a11yProps(0)} />
+                    </Tabs>
+                </Box>
+                <CustomTabPanel value={value} index={0}>
+                    <FitchBox/>
+                </CustomTabPanel>
 
-        </Paper>
-    </Box>
-  )
+            </Paper>
+        </Box>
+    )
 }
-
 
 
 export default App

@@ -7,7 +7,7 @@
         for(let i=0; i<more.length; i+=1){
        		if(!op){op = more[i][0];};
         	if(op != more[i][0]){
-            	throw "Different operators on same level";
+            	throw peg$SyntaxError("Different operators on same level");
             }
             res.push(more[i][1])
         }

@@ -1,62 +1,64 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
-import ProofLineBox from "./ProofLineBox.jsx"
-import {Justification, SentenceLine} from "../fitch/proofstructure.js";
-import {Sentence} from "../fitch/prop/structure.js";
-import {Rule} from "../fitch/rules.js";
-
-
-import * as Rules from "../fitch/prop/rules.js"
+import ProofBox from "./ProofBox.jsx"
+import {SentenceLine} from "../fitch/proofstructure.js";
 
 export default function FitchBox() {
     const [premisesEnd, setPremisesEnd] = React.useState(0);
     const [lines, setLines] = React.useState([]);
 
-    function updateLine(i){
+    const premises = lines.entries().toArray().slice(0, premisesEnd);
+    const proofLines = lines.entries().toArray().slice(premisesEnd);
+
+    function addLine(line, insertIndex) {
+        setLines([...lines.slice(0, insertIndex), line, ...lines.slice(insertIndex)])
+    }
+
+    function removeLineWrapper(removeIndex) {
+        return () => {
+
+            const layer = lines[removeIndex].level;
+            let removeEnd = removeIndex;
+            if (lines[removeIndex].isAssumption) {
+                removeEnd++;
+                for (; removeEnd < lines.length; removeEnd++) {
+                    if (lines[removeEnd].level < layer || ((layer === lines[removeEnd].level) && lines[removeEnd].isAssumption)) {
+                        removeEnd--;
+                        break;
+                    }
+                }
+            }
+
+            setLines([...lines.slice(0, removeIndex), ...lines.slice(removeEnd + 1)])
+        }
+    }
+
+    function updateLine(i) {
         return ((newLine) => {
             let newLines = [...lines]
-            newLines[i] = newLine,
-                setLines(newLines)
+            newLines[i] = newLine
+            setLines(newLines)
         });
     }
 
     return (
         <Box>
-            <Stack>
-                {lines.entries().toArray().slice(0,premisesEnd).map(([i,x]) => (<ProofLineBox lineNum={i+1} line={x} requiresJustification={false} updateFun={updateLine(i)} />))}
-            </Stack>
+            <ProofBox premises={premises} proofLines={proofLines} addLine={addLine}
+                      removeLineWrapper={removeLineWrapper} updateLine={updateLine} setPremisesEnd={setPremisesEnd}
+                      premisesEnd={premisesEnd}></ProofBox>
             <Button onClick={() => {
-                setPremisesEnd(premisesEnd+1)
-                setLines([...lines.slice(0,premisesEnd), new SentenceLine(new Sentence(), new Justification(Rule.derived["Reit"], {})), ...lines.slice(premisesEnd)]);
-            }}
-            >Add Premise</Button>
-            <hr />
-            <Stack>
-                {lines.entries().toArray().slice(premisesEnd).map(([i,x]) => (<ProofLineBox lineNum={i+1} line={x} requiresJustification={true} updateFun={updateLine(i)} />))}
-            </Stack>
-            <Button onClick={() => {
-                setLines([...lines, new SentenceLine(new Sentence(), new Justification(Rule.derived["Reit"],  {}), 0, false)]);
-            }}
-            > Add Line</Button>
-            <Button onClick={() => {
-                setLines([...lines, new SentenceLine(new Sentence(), new Justification(Rule.derived["Reit"],  {}), 0, true)]);
-            }}
-            > Start Subproof </Button>
-            <Button onClick={() => {
-                for(let i = premisesEnd; i<lines.length; i++){
+                for (let i = premisesEnd; i < lines.length; i++) {
                     let newLine = new SentenceLine(lines[i].sentence, lines[i].justification);
-                    try{
+                    try {
                         newLine.check(lines, i)
                         newLine.isValid = true;
 
                     } catch (error) {
                         newLine.error = error
                     }
-                    console.log(newLine)
-                    updateLine(i)(newLine)
                 }
+                setLines([...lines])
             }}>
                 Check Proof
             </Button>
