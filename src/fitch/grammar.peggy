@@ -27,10 +27,10 @@ Sen
   / left:PSen more:((binop PSen)*) { return flatten(left, more); }
 
 PSen
- = n:neg s:PSen {return {type: "un", data: {op:n, sen:s}};}
+ = n:neg s:PSen {return {type: "un", op:n, sen:s};}
  / "(" left:Sen ")" {return left;}
  / a:Atom
- 
+
 Atom
   = pred:predicateSym par:("(" (Term|1..,","|)  ")")?  {if(!par){return {type:"atom", const:pred};}else{return {type: "pred", data:{pred:pred, terms:par[1]}}}; }
   / '#' {return {type:"falsum"}}
@@ -41,15 +41,22 @@ Term
 
 predicateSym
   = $([A-uw-z][A-uw-z]*)
-  
+
 functionConVarSym
   = $([a-z]+)
 
 binop
-  = '&' / '|' / '>' / '<>' / '\u2227' {return "&"} / '\u2228' {return "|"} / '\u2192' {return ">"} / '\u2194' {return "<>"}
+  = '&' {return "\u2227"}
+  / '|' {return "\u2228"}
+  / '>' {return "\u2192"}
+  / '<>' {return "\u2194"}
+  / '\u2227'
+  / '\u2228'
+  / '\u2192'
+  / '\u2194'
 
 neg
- = '~' / '\u00AC' {return "~";}
+ = '~' {return "\u00AC";} / '\u00AC'
 
 quant
-  = '!' {return "!"} / '?' {return "?"} / '\u2203' {return "?"} / '\u2200' {return "!"}
+  = '!' {return "\u2200"} / '?' {return "\u2203"} / '\u2203' / '\u2200'

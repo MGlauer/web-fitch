@@ -3,7 +3,7 @@ import * as React from "react";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import {Justification, SentenceLine} from "../fitch/proofstructure.js";
-import {Sentence} from "../fitch/prop/structure.js";
+import {Sentence} from "../fitch/structure.js";
 import {Rule} from "../fitch/rules.js";
 import Divider from '@mui/material/Divider';
 
@@ -38,8 +38,6 @@ export default function ProofBox({
         >Add Premise</Button>)
     }
 
-
-    //proofLines[i].level < layer || ((layer ===  proofLines[i].level) && lines[removeEnd].isAssumption
     // Collate subproofs
     for (let i = 0; i < proofLines.length; i++) {
         const [lineNum, line] = proofLines[i]

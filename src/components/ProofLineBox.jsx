@@ -1,4 +1,4 @@
-import {parse} from "../fitch/prop/structure.js";
+import {parse} from "../fitch/structure.js";
 import {Justification, SentenceLine} from "../fitch/proofstructure.js";
 import {Rule} from "../fitch/rules.js";
 import Grid from "@mui/material/Grid";
@@ -12,7 +12,6 @@ import ErrorIcon from "@mui/icons-material/Error";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import CheckIcon from "@mui/icons-material/Check";
 import {IconButton} from "@mui/material";
-import * as Rules from "../fitch/prop/rules.js";
 
 function readLinesText(text) {
     let vs = text.split(",");

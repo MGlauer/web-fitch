@@ -1,4 +1,4 @@
-import {parse as peggyParse} from '../parser.js'
+import {parse as peggyParse} from './parser.js'
 
 export function parse(input) {
     return process(peggyParse(input))
@@ -122,9 +122,9 @@ export class BinarySentence extends Sentence {
         const array1 = this.associativeParts
         if (other instanceof BinarySentence && this.op == other.op) {
             const array2 = other.associativeParts
-            return array2.length < array1.length && array2.every(item => array1.find(item2 => item === item2))
+            return array2.length < array1.length && (array2.every(item => array1.find(item2 => item.equals(item2))) !== undefined)
         } else {
-            return array1.find(item => item == other)
+            return array1.find(item => item.equals(other)) !== undefined
         }
     }
 
@@ -233,32 +233,32 @@ export class Variable extends Term {
 
 
 export const UnaryOp = {
-    NEG: "~",
+    NEG: "\u00AC",
 };
 
 function readUnaryOp(input) {
     switch (input) {
-        case("~"):
+        case("\u00AC"):
             return UnaryOp.NEG
     }
 }
 
 export const BinaryOp = {
-    AND: "&",
-    OR: "|",
-    IMPL: ">",
-    BIMPL: "<>",
+    AND: "\u2227",
+    OR: "\u2228",
+    IMPL: "\u2192",
+    BIMPL: "\u2194",
 };
 
 function readBinaryOp(input) {
     switch (input) {
-        case("&"):
+        case("\u2227"):
             return BinaryOp.AND
-        case("|"):
+        case("\u2228"):
             return BinaryOp.OR
-        case(">"):
+        case("\u2192"):
             return BinaryOp.IMPL
-        case("<>"):
+        case("\u2194"):
             return BinaryOp.BIMPL
         default:
             throw Error("Unknown input: " + input)
@@ -266,15 +266,15 @@ function readBinaryOp(input) {
 }
 
 export const Quantor = {
-    EX: "?",
-    ALL: "!",
+    EX: "\u2203",
+    ALL: "\u2200",
 };
 
 function readQuantor(input) {
     switch (input) {
-        case("!"):
+        case("\u2200"):
             return Quantor.ALL
-        case("?"):
+        case("\u2203"):
             return Quantor.EX
         default:
             throw Error("Unknown input: " + input)

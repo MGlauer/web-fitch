@@ -21,16 +21,19 @@ export default function FitchBox() {
 
             const layer = lines[removeIndex].level;
             let removeEnd = removeIndex;
-            if (lines[removeIndex].isAssumption) {
-                removeEnd++;
-                for (; removeEnd < lines.length; removeEnd++) {
-                    if (lines[removeEnd].level < layer || ((layer === lines[removeEnd].level) && lines[removeEnd].isAssumption)) {
-                        removeEnd--;
-                        break;
+            if(removeIndex >= premisesEnd){
+                if (lines[removeIndex].isAssumption) {
+                    removeEnd++;
+                    for (; removeEnd < lines.length; removeEnd++) {
+                        if (lines[removeEnd].level < layer || ((layer === lines[removeEnd].level) && lines[removeEnd].isAssumption)) {
+                            removeEnd--;
+                            break;
+                        }
                     }
                 }
+            } else {
+                setPremisesEnd(premisesEnd-1)
             }
-
             setLines([...lines.slice(0, removeIndex), ...lines.slice(removeEnd + 1)])
         }
     }
@@ -52,7 +55,9 @@ export default function FitchBox() {
                 for (let i = premisesEnd; i < lines.length; i++) {
                     let newLine = lines[i]
                     try {
-                        newLine.check(lines, i)
+                        newLine.error = ""
+                        if(!newLine.isAssumption)
+                            newLine.check(lines, i)
                         newLine.isValid = true;
 
                     } catch (error) {
