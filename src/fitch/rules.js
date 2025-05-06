@@ -113,7 +113,7 @@ function assertLine(ref){
 }
 
 
-class Assumption extends Rule {
+export class Assumption extends Rule {
     static label = "Assumption";
     static {
         register(this);
@@ -124,7 +124,7 @@ class Assumption extends Rule {
 }
 
 // Reit: Reiteration of line
-class Reiteration extends Rule {
+export class Reiteration extends Rule {
 
     static label = "Reit";
     static {
@@ -143,7 +143,7 @@ class Reiteration extends Rule {
 }
 
 // &I: Conjunction Introduction
-class ConjunctionIntro extends Rule {
+export class ConjunctionIntro extends Rule {
     static label = "\u2227-Intro";
     static {
         register(this);
@@ -170,7 +170,7 @@ class ConjunctionIntro extends Rule {
 }
 
 // &E: Conjunction Elimination
-class ConjunctionElim extends Rule {
+export class ConjunctionElim extends Rule {
     static label = "\u2227-Elim";
     static {
         register(this);
@@ -198,7 +198,7 @@ class ConjunctionElim extends Rule {
 
 
 // >I: Conditional Introduction
-class ConditionalIntro extends Rule {
+export class ConditionalIntro extends Rule {
     static label = "\u2192-Intro";
     static {
         register(this);
@@ -229,7 +229,7 @@ class ConditionalIntro extends Rule {
 }
 
 // >E: Conditional Elimination
-class ConditionalElim extends Rule {
+export class ConditionalElim extends Rule {
 
     static label = "\u2192-Elim";
     static {
@@ -258,7 +258,7 @@ class ConditionalElim extends Rule {
 }
 
 // vI: Disjunction Introduction
-class DisjunctionIntro extends Rule {
+export class DisjunctionIntro extends Rule {
 
     static label = "\u2228-Intro";
     static {
@@ -285,7 +285,7 @@ class DisjunctionIntro extends Rule {
 }
 
 // vE: Disjunction Elimination
-class DisjunctionElim extends Rule {
+export class DisjunctionElim extends Rule {
 
     static label = "\u2228-Elim";
     static {
@@ -327,7 +327,7 @@ class DisjunctionElim extends Rule {
 }
 
 // ~I: Negation Introduction
-class NegationIntro extends Rule {
+export class NegationIntro extends Rule {
 
     static label = String.fromCharCode(172) + "-Intro";
     static {
@@ -357,7 +357,7 @@ class NegationIntro extends Rule {
 }
 
 // ~E: Negation Elimination (formerly Double Negation Elimination)
-class NegationElim extends Rule {
+export class NegationElim extends Rule {
 
     static label = String.fromCharCode(172) + "-Elim";
     static {
@@ -382,7 +382,7 @@ class NegationElim extends Rule {
 }
 
 // #I: Falsum/Absurdity Introduction (formerly Negation Elimination)
-class FalsumIntro extends Rule {
+export class FalsumIntro extends Rule {
 
     static label = "\u22A5-Intro";
     static {
@@ -411,7 +411,7 @@ class FalsumIntro extends Rule {
 
 
 // EFQ: Ex Falso Quodlibet
-class FalsumElim extends Rule {
+export class FalsumElim extends Rule {
 
     static label = "\u22A5-Elim";
     static {
@@ -432,7 +432,7 @@ class FalsumElim extends Rule {
 }
 
 // <>I: Biconditional Introduction
-class BiconditionalIntro extends Rule {
+export class BiconditionalIntro extends Rule {
 
     static label = "\u2194-Intro";
     static {
@@ -468,7 +468,7 @@ class BiconditionalIntro extends Rule {
 }
 
 //<>E: Biconditional Elimination
-class BiconditionalElim extends Rule {
+export class BiconditionalElim extends Rule {
 
     static label = "\u2194-Elim";
     static {
@@ -495,7 +495,7 @@ class BiconditionalElim extends Rule {
 
 /*
 //!E: Universal Elimination
-class UniversalElim extends Rule {
+export class UniversalElim extends Rule {
     static {
         register(this);
     }
