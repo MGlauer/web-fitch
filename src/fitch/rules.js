@@ -146,21 +146,25 @@ export class ConjunctionIntro extends Rule {
     }
 
     static _check(references, target) {
-        if (references.length !== 2) {
-            throw new RuleError('Rule must be applied to two lines.');
+        if (references.length < 2) {
+            throw new RuleError('Rule must be applied to at least two lines.');
         }
-
-        let [a, b] = references;
-
-        assertLine(a)
-        assertLine(b)
 
         if ((!(target instanceof BinarySentence)) || (target.op !== BinaryOp.AND)) {
             throw new RuleError('The formula being derived must be a conjunction.');
         }
 
-        if (!target.equals(new BinarySentence(a, BinaryOp.AND, b))) {
-            throw new RuleError(`The formulas ${a.text} and ${b.text} must be the conjuncts of the formula being derived.`);
+        let conjuncts = target.associativeParts;
+        for(const r of references){
+            assertLine(r)
+            const idx = conjuncts.findIndex((x) => r.equals(x))
+            if(idx === undefined)
+                throw new RuleError(`The ${r.text} is not a conjunct of the formula being derived.`);
+            conjuncts.splice(idx,1)
+        }
+
+        if (conjuncts.length > 0) {
+            throw new RuleError(`Some conjuncts were not found: ${conjuncts.map((x) => x.text)}`);
         }
     }
 }

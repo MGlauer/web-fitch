@@ -136,8 +136,8 @@ export class BinarySentence extends Sentence {
         if (this.isAssociative) { // Assiziative ops
             const array1 = this.associativeParts
             const array2 = other.associativeParts
-            const isInArray1 = array1.every(item => array2.find(item2 => item === item2))
-            const isInArray2 = array2.every(item => array1.find(item2 => item === item2))
+            const isInArray1 = array1.every(item => array2.find(item2 => item.equals(item2)) !== undefined)
+            const isInArray2 = array2.every(item => array1.find(item2 => item.equals(item2)) !== undefined)
             return array1.length === array2.length && isInArray1 && isInArray2
         } else
             return this.left.equals(other.left) && this.right.equals(other.right)
