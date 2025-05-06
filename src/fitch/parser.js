@@ -205,7 +205,7 @@ function peg$parse(input, options) {
     function peg$f1(left, more) {    return flatten(left, more);  }
     function peg$f2(n, s) {return {type: "un", op:n, sen:s};  }
     function peg$f3(left) {return left;  }
-    function peg$f4(pred, par) {if(!par){return {type:"atom", const:pred};}else{return {type: "pred", data:{pred:pred, terms:par[1]}}};  }
+    function peg$f4(pred, par) {if(!par){return {type:"atom", const:pred};}else{return {type: "pred", data:{pred:pred, terms:par[1]}}}  }
     function peg$f5() {return {type:"falsum"}  }
     function peg$f6() {return {type:"falsum"}  }
     function peg$f7(fun, par) {if(!par){return {type:"const", const:fun};}else{return {type: "fun", data:{fun:fun, terms:par[1]}};}  }
@@ -956,7 +956,7 @@ function peg$parse(input, options) {
         if(more.length == 0) return sen;
         let res = [sen];
         for(let i=0; i<more.length; i+=1){
-            if(!op){op = more[i][0];};
+            if(!op){op = more[i][0];}
             if(op != more[i][0]){
                 throw peg$SyntaxError("Different operators on same level");
             }

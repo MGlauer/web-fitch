@@ -80,10 +80,6 @@ export function register(obj) {
     Rule.derived[obj.label] = obj;
 }
 
-export function assertAvailableIn(lines, i, j) {
-    return;
-}
-
 export function getLine(lines, i) {
     return lines[i].sentence
 }
