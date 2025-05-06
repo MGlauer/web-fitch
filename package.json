@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "parser": "peggy -o parser.js src/fitch/grammar.peggy"
+    "parser": "peggy -o src/fitch/parser.js src/fitch/grammar.peggy"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

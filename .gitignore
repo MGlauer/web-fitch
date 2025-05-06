@@ -13,6 +13,7 @@ dist-ssr
 *.local
 
 package-lock.json
+src/fitch/parser.js
 
 # Editor directories and files
 .vscode/*
