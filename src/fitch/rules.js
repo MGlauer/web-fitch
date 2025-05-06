@@ -155,12 +155,21 @@ export class ConjunctionIntro extends Rule {
         }
 
         let conjuncts = target.associativeParts;
+
+
         for(const r of references){
+            let candidates = [];
+            if(r.isAssociative)
+                candidates = r.associativeParts
+            else
+                candidates = [r]
             assertLine(r)
-            const idx = conjuncts.findIndex((x) => r.equals(x))
-            if(idx === undefined)
-                throw new RuleError(`The ${r.text} is not a conjunct of the formula being derived.`);
-            conjuncts.splice(idx,1)
+            for(const can of candidates) {
+                const idx = conjuncts.findIndex((x) => can.equals(x))
+                if (idx === undefined)
+                    throw new RuleError(`${r} is not a conjunct of the formula being derived.`);
+                conjuncts.splice(idx, 1)
+            }
         }
 
         if (conjuncts.length > 0) {
