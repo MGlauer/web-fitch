@@ -13,6 +13,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import CheckIcon from "@mui/icons-material/Check";
 import {IconButton} from "@mui/material";
 import Menu from "@mui/material/Menu";
+import SentenceComponent from "./SentenceComponent.jsx";
 
 function readLinesText(text) {
     let vs = text.split(",");
@@ -70,18 +71,18 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
         setContextMenu(null);
     };
 
-    const handleSentenceChange = (event) => {
+    function updateSentence(text){
         let sen;
         try {
-            sen = parse(event.target.value)
+            sen = parse(text)
         } catch (error) {
             if (error.name === "SyntaxError")
-                sen = {text: event.target.value, "error": error.message}
+                sen = {text: text, "error": error.message}
             else
                 throw error
         }
         updateFun(new SentenceLine(sen, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption));
-    };
+    }
 
     const handleSelectChange = (event) => {
         const newJustification = new Justification(Rule.derived[event.target.value], sentenceLine.justification.lines)
@@ -137,15 +138,7 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
         <Box sx={{width: 1}} onContextMenu={handleContextMenu} style={{ cursor: 'context-menu' }}>
             <Grid sx={{justifyContent: "flex-end", alignItems: "flex-end",}}container>
                 <Grid size="grow">
-                    <TextField sx={{width: "100%"}}
-                               size="small"
-                               label="Sentence"
-                               id="standard-basic"
-                               variant="filled"
-                               error={sentenceLine.sentence.error}
-                               helperText={sentenceLine.sentence.error ? sentenceLine.sentence.error : ""}
-                               onChange={handleSentenceChange}
-                               value={sentenceLine.sentence.text}/>
+                    <SentenceComponent sentence={sentenceLine.sentence} updateSentence={updateSentence} />
                 </Grid>
                 {justForm}
                 <Grid size={1}>{proofIndicator}</Grid>
