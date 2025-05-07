@@ -45,30 +45,33 @@ export default function FitchBox() {
             setLines(newLines)
         });
     }
+
+    function checkProof(){
+        for (let i = premisesEnd; i < lines.length; i++) {
+            let newLine = lines[i]
+            try {
+                newLine.error = ""
+                if(!newLine.isAssumption)
+                    newLine.check(lines, i)
+                newLine.isValid = true;
+
+            } catch (error) {
+                if(error instanceof  RuleError)
+                    newLine.error = error.message
+                else
+                    throw error
+            }
+        }
+        setLines([...lines])
+    }
+
     console.log(lines)
     return (
         <Box>
             <ProofBox premises={premises} proofLines={proofLines} addLine={addLine}
                       removeLineWrapper={removeLineWrapper} updateLine={updateLine} setPremisesEnd={setPremisesEnd}
                       premisesEnd={premisesEnd}></ProofBox>
-            <Button onClick={() => {
-                for (let i = premisesEnd; i < lines.length; i++) {
-                    let newLine = lines[i]
-                    try {
-                        newLine.error = ""
-                        if(!newLine.isAssumption)
-                            newLine.check(lines, i)
-                        newLine.isValid = true;
-
-                    } catch (error) {
-                        if(error instanceof  RuleError)
-                            newLine.error = error.message
-                        else
-                            throw error
-                    }
-                }
-                setLines([...lines])
-            }}>
+            <Button onClick={checkProof}>
                 Check Proof
             </Button>
         </Box>
