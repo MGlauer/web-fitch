@@ -34,8 +34,9 @@ export default function ProofBox({
                           updateFun={updateLine(i)}
                           removeLine={removeLineWrapper(i)}
                           //addLineBefore={() => addLineAt(i)}
-                          addLineAfter={() => addLineAt(i+1)}
-                          startSubproofAfter={() => startSubproofLineAt(i+1)}/>))
+                          //addLineAfter={() => addLineAt(i+1)}
+                          //startSubproofAfter={() => startSubproofLineAt(i+1)}
+            />))
     }
     if (isTopLevel) {
         premiseBlock.push(<Button sx={{fontSize: 10}} onClick={() => {

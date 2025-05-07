@@ -164,10 +164,10 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
                         : undefined
                 }
             >
-                <MenuItem onClick={() => {handleClose();removeLine()}}>Delete Line</MenuItem>
+                <MenuItem disabled={removeLine===undefined} onClick={() => {handleClose();removeLine()}}>Delete Line</MenuItem>
                 <MenuItem disabled={addLineBefore===undefined} onClick={() => {handleClose();addLineBefore()}}>Add Line Before</MenuItem>
-                <MenuItem onClick={() => {handleClose();addLineAfter()}}>Add Line After</MenuItem>
-                <MenuItem onClick={() => {handleClose();startSubproofAfter()}}>Start Subproof After</MenuItem>
+                <MenuItem disabled={addLineAfter===undefined} onClick={() => {handleClose();addLineAfter()}}>Add Line After</MenuItem>
+                <MenuItem disabled={startSubproofAfter===undefined} onClick={() => {handleClose();startSubproofAfter()}}>Start Subproof After</MenuItem>
             </Menu>
         </Box>)
 }
