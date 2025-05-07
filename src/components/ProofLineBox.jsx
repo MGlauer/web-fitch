@@ -120,15 +120,17 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
     }
 
     // Generate proof indicator
-    let proofIndicator = undefined
-    if (line.error) {
-        proofIndicator = (<Tooltip title={line.error}>
-            <ErrorIcon color="error"/>
-        </Tooltip>)
-    } else if (line.isValid) {
-        proofIndicator = (<CheckIcon color="success"/>)
-    } else {
-        proofIndicator = (<></>)
+    let proofIndicator = (<></>)
+    if(!sentenceLine.isAssumption){
+        if (line.error) {
+            proofIndicator = (<Tooltip title={line.error}>
+                <ErrorIcon color="error"/>
+            </Tooltip>)
+        } else if (line.isValid) {
+            proofIndicator = (<CheckIcon color="success"/>)
+        } else {
+            proofIndicator = (<></>)
+        }
     }
 
     return (
