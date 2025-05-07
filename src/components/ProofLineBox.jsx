@@ -99,23 +99,26 @@ export default function ProofLineBox({lineNum, line, removeLine, updateFun}) {
         proofIndicator = (<></>)
     }
 
-    return (<Box sx={{width: 1}}><Grid container>
-        <Grid size="grow">
-            <TextField sx={{width: "100%"}}
-                       size="small"
-                       label="Sentence"
-                       id="standard-basic"
-                       variant="filled"
-                       error={sentenceLine.sentence.error}
-                       helperText={sentenceLine.sentence.error ? sentenceLine.sentence.error : ""}
-                       onChange={handleSentenceChange}
-                       value={sentenceLine.sentence.text}/>
-        </Grid>
-        {justForm}
-        <Grid size={1}>{proofIndicator}</Grid>
-        <IconButton onClick={removeLine}>
-            <DeleteForeverIcon/>
-        </IconButton>
-        <Grid size={1}>{lineNum} </Grid>
-    </Grid></Box>)
+    return (
+        <Box sx={{width: 1}}>
+            <Grid sx={{justifyContent: "flex-end", alignItems: "flex-end",}}container>
+                <Grid size="grow">
+                    <TextField sx={{width: "100%"}}
+                               size="small"
+                               label="Sentence"
+                               id="standard-basic"
+                               variant="filled"
+                               error={sentenceLine.sentence.error}
+                               helperText={sentenceLine.sentence.error ? sentenceLine.sentence.error : ""}
+                               onChange={handleSentenceChange}
+                               value={sentenceLine.sentence.text}/>
+                </Grid>
+                {justForm}
+                <Grid size={1}>{proofIndicator}</Grid>
+                <IconButton onClick={removeLine}>
+                    <DeleteForeverIcon/>
+                </IconButton>
+                <Grid size={1}>{lineNum} </Grid>
+            </Grid>
+        </Box>)
 }
