@@ -52,7 +52,12 @@ export class UnarySentence extends Sentence {
     }
 
     get text() {
-        return this.op + this.right.text
+        if(this.right instanceof Atom || this.right instanceof PropAtoms || this.right instanceof UnarySentence){
+            return this.op + this.right.text
+        } else {
+            return `${this.op}(${this.right.text})`
+        }
+
     };
 
     substitute(vari, cons) {

@@ -41,17 +41,17 @@ export default function ProofBox({
     if (isTopLevel) {
         premiseBlock.push(<Button sx={{fontSize: 10}} onClick={() => {
             setPremisesEnd(premisesEnd + 1)
-            addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Reit"], {}), layer, true), premises.length > 0 ? premises[premises.length - 1][0] + 1 : 0);
+            addLine(new SentenceLine("", new Justification(Rule.derived["Reit"], {}), layer, true), premises.length > 0 ? premises[premises.length - 1][0] + 1 : 0);
         }}
         >Add Premise</Button>)
     }
 
     function addLineAt(i){
-        return addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Reit"], {}), layer, false), i)
+        return addLine(new SentenceLine("", new Justification(Rule.derived["Reit"], {}), layer, false), i)
     }
 
     function startSubproofLineAt(i){
-        return addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Assumption"], {}), layer + 1, true), i)
+        return addLine(new SentenceLine("", new Justification(Rule.derived["Assumption"], {}), layer + 1, true), i)
     }
 
     // Collate subproofs
@@ -112,12 +112,12 @@ export default function ProofBox({
                 {lineElements}
                 <Box>
                     <Button sx={{fontSize: 10}} onClick={() => {
-                        addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Reit"], {}), layer, false), lastLineNumber + 1);
+                        addLine(new SentenceLine("", new Justification(Rule.derived["Reit"], {}), layer, false), lastLineNumber + 1);
                     }}
                     > Add Line
                     </Button>
                     <Button sx={{fontSize: 10}} onClick={() => {
-                        addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Assumption"], {}), layer + 1, true), lastLineNumber + 1);
+                        addLine(new SentenceLine("", new Justification(Rule.derived["Assumption"], {}), layer + 1, true), lastLineNumber + 1);
                     }}
                     > Start Subproof </Button>
                 </Box>

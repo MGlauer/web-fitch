@@ -72,26 +72,26 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
     };
 
     function updateSentence(text){
-        let sen;
+        let e = null;
         try {
-            sen = parse(text)
+            parse(text)
         } catch (error) {
             if (error.name === "SyntaxError")
-                sen = {text: text, "error": error.message}
+                e = error.message
             else
                 throw error
         }
-        updateFun(new SentenceLine(sen, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption));
+        updateFun(new SentenceLine(text, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption, e, sentenceLine.ruleError));
     }
 
     const handleSelectChange = (event) => {
         const newJustification = new Justification(Rule.derived[event.target.value], sentenceLine.justification.lines)
-        updateFun(new SentenceLine(sentenceLine.sentence, newJustification, sentenceLine.level, sentenceLine.isAssumption));
+        updateFun(new SentenceLine(sentenceLine.rawString, newJustification, sentenceLine.level, sentenceLine.isAssumption, sentenceLine.parseError, sentenceLine.ruleError));
     };
 
     const handleLinesChange = (event) => {
         const newJustification = new Justification(sentenceLine.justification.rule, readLinesText(event.target.value))
-        updateFun(new SentenceLine(sentenceLine.sentence, newJustification, sentenceLine.level, sentenceLine.isAssumption));
+        updateFun(new SentenceLine(sentenceLine.rawString, newJustification, sentenceLine.level, sentenceLine.isAssumption, sentenceLine.parseError, sentenceLine.ruleError));
     };
 
 
@@ -123,8 +123,8 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
     // Generate proof indicator
     let proofIndicator = (<></>)
     if(!sentenceLine.isAssumption){
-        if (line.error) {
-            proofIndicator = (<Tooltip title={line.error}>
+        if (line.ruleError) {
+            proofIndicator = (<Tooltip title={line.ruleError}>
                 <ErrorIcon color="error"/>
             </Tooltip>)
         } else if (line.isValid) {
@@ -138,7 +138,7 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
         <Box sx={{width: 1}} onContextMenu={handleContextMenu} style={{ cursor: 'context-menu' }}>
             <Grid sx={{justifyContent: "flex-end", alignItems: "flex-end",}}container>
                 <Grid size="grow">
-                    <SentenceComponent sentence={sentenceLine.sentence} updateSentence={updateSentence} />
+                    <SentenceComponent sentence={sentenceLine.rawString} updateSentence={updateSentence} error={sentenceLine.parseError}/>
                 </Grid>
                 {justForm}
                 <Grid size={1}>{proofIndicator}</Grid>

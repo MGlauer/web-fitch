@@ -8,13 +8,13 @@ import Stack from '@mui/material/Stack';
 import * as React from "react";
 
 
-export default function SentenceComponent({sentence, updateSentence}){
+export default function SentenceComponent({sentence, updateSentence, error}){
     const [inFocus, setInFocus] = React.useState(false)
 
     function addCharacter(c){
         function inner(event){
             event.preventDefault()
-            updateSentence(sentence.text+c)
+            updateSentence(sentence+c)
         }
         return inner;
     }
@@ -45,6 +45,6 @@ export default function SentenceComponent({sentence, updateSentence}){
                 {CharButton("\u00AC")}
                 {CharButton("\u2227")}
             </ButtonGroup>):<></>}
-            <FormHelperText error={true}>{sentence.error}</FormHelperText>
+            <FormHelperText error={true}>{error}</FormHelperText>
         </Stack>)
 }
