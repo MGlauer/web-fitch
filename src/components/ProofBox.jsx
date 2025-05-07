@@ -1,6 +1,7 @@
 import ProofLineBox from "./ProofLineBox.jsx";
 import * as React from "react";
 import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import {Justification, SentenceLine} from "../fitch/proofstructure.js";
 import {Sentence} from "../fitch/structure.js";
@@ -78,23 +79,27 @@ export default function ProofBox({
     }
 
     return (
-        <Stack direction="column" sx={{
-            borderColor: "primary.dark", mt: 1, ml: 5, borderLeft: 1, display: 'flex', justifyContent: "flex-start",
-            alignItems: "flex-start",
-        }}>
-            {premiseBlock}
-            <Divider sx={{bgcolor: "primary.dark"}} flexItem/>
-            {lineElements}
-            <Button sx={{fontSize: 10}} onClick={() => {
-                addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Reit"], {}), layer, false), lastLineNumber + 1);
-            }}
-            > Add Line
-            </Button>
-            <Button sx={{fontSize: 10}} onClick={() => {
-                addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Assumption"], {}), layer + 1, true), lastLineNumber + 1);
-            }}
-            > Start Subproof </Button>
-        </Stack>
+        <Box sx={{pt:2, pl:3, display: 'block'}}>
+            <Stack direction="column" sx={{
+                borderColor: "primary.dark",
+                borderLeft: 1,
+                justifyContent: "flex-start",
+                alignItems: "flex-start",
+            }}>
+                {premiseBlock}
+                <Divider sx={{bgcolor: "primary.dark"}} flexItem/>
+                {lineElements}
+                <Button sx={{fontSize: 10}} onClick={() => {
+                    addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Reit"], {}), layer, false), lastLineNumber + 1);
+                }}
+                > Add Line
+                </Button>
+                <Button sx={{fontSize: 10}} onClick={() => {
+                    addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Assumption"], {}), layer + 1, true), lastLineNumber + 1);
+                }}
+                > Start Subproof </Button>
+            </Stack>
+        </Box>
     )
 
 }

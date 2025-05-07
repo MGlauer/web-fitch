@@ -75,7 +75,9 @@ export default function ProofLineBox({lineNum, line, removeLine, updateFun}) {
                 </Select>
             </Grid>),
             (<Grid size={1}>
-                <TextField variant="standard" onChange={handleLinesChange}
+                <TextField variant="filled" onChange={handleLinesChange}
+                           label="Lines"
+                           size="small"
                            error={sentenceLine.justification.lines.error}
                            helperText={sentenceLine.justification.lines.error ? sentenceLine.justification.lines.error : ""}
                            value={sentenceLine.justification.lines.text}/>
@@ -97,11 +99,17 @@ export default function ProofLineBox({lineNum, line, removeLine, updateFun}) {
         proofIndicator = (<></>)
     }
 
-    return (<Box><Grid container>
+    return (<Box sx={{width: 1}}><Grid container>
         <Grid size="grow">
-            <TextField sx={{width: "100%"}} id="standard-basic" variant="standard" error={sentenceLine.sentence.error}
+            <TextField sx={{width: "100%"}}
+                       size="small"
+                       label="Sentence"
+                       id="standard-basic"
+                       variant="filled"
+                       error={sentenceLine.sentence.error}
                        helperText={sentenceLine.sentence.error ? sentenceLine.sentence.error : ""}
-                       onChange={handleSentenceChange} value={sentenceLine.sentence.text}/>
+                       onChange={handleSentenceChange}
+                       value={sentenceLine.sentence.text}/>
         </Grid>
         {justForm}
         <Grid size={1}>{proofIndicator}</Grid>

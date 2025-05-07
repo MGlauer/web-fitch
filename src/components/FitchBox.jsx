@@ -68,10 +68,13 @@ export default function FitchBox() {
     console.log(lines)
     return (
         <Box>
-            <ProofBox premises={premises} proofLines={proofLines} addLine={addLine}
-                      removeLineWrapper={removeLineWrapper} updateLine={updateLine} setPremisesEnd={setPremisesEnd}
-                      premisesEnd={premisesEnd}></ProofBox>
+            <Box sx={{overflow: "auto"}}>
+                <ProofBox premises={premises} proofLines={proofLines} addLine={addLine}
+                          removeLineWrapper={removeLineWrapper} updateLine={updateLine} setPremisesEnd={setPremisesEnd}
+                          premisesEnd={premisesEnd}></ProofBox>
+            </Box>
             <Button onClick={checkProof}>
+
                 Check Proof
             </Button>
         </Box>
