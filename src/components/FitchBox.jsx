@@ -74,7 +74,6 @@ export default function FitchBox() {
                           premisesEnd={premisesEnd}></ProofBox>
             </Box>
             <Button onClick={checkProof}>
-
                 Check Proof
             </Button>
         </Box>

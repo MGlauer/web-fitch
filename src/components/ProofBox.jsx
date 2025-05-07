@@ -25,18 +25,32 @@ export default function ProofBox({
     let buffer = [];
 
     let premiseBlock = []
-
+    const isTopLevel = premisesEnd !== null
 
     for (const [i, premise] of premises) {
         premiseBlock.push((
-            <ProofLineBox lineNum={i + 1} line={premise} removeLine={removeLineWrapper(i)} updateFun={updateLine(i)}/>))
+            <ProofLineBox lineNum={i + 1}
+                          line={premise}
+                          updateFun={updateLine(i)}
+                          removeLine={removeLineWrapper(i)}
+                          //addLineBefore={() => addLineAt(i)}
+                          addLineAfter={() => addLineAt(i+1)}
+                          startSubproofAfter={() => startSubproofLineAt(i+1)}/>))
     }
-    if (premisesEnd !== null) {
+    if (isTopLevel) {
         premiseBlock.push(<Button sx={{fontSize: 10}} onClick={() => {
             setPremisesEnd(premisesEnd + 1)
             addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Reit"], {}), layer, true), premises.length > 0 ? premises[premises.length - 1][0] + 1 : 0);
         }}
         >Add Premise</Button>)
+    }
+
+    function addLineAt(i){
+        return addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Reit"], {}), layer, false), i)
+    }
+
+    function startSubproofLineAt(i){
+        return addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Assumption"], {}), layer + 1, true), i)
     }
 
     // Collate subproofs
@@ -58,8 +72,14 @@ export default function ProofBox({
                 buffer.push(proofLines[i])
             else
                 lineElements.push((
-                    <ProofLineBox lineNum={lineNum + 1} line={line} removeLine={removeLineWrapper(lineNum)}
-                                  updateFun={updateLine(lineNum)}/>))
+                    <ProofLineBox lineNum={lineNum + 1}
+                                  line={line}
+                                  removeLine={removeLineWrapper(lineNum)}
+                                  addLineBefore={() => addLineAt(lineNum)}
+                                  addLineAfter={() => addLineAt(lineNum+1)}
+                                  startSubproofAfter={() => startSubproofLineAt(lineNum+1)}
+                                  updateFun={updateLine(lineNum)}
+                    />))
         } else {
             buffer.push(proofLines[i])
         }
@@ -89,15 +109,17 @@ export default function ProofBox({
                 {premiseBlock}
                 <Divider sx={{bgcolor: "primary.dark"}} flexItem/>
                 {lineElements}
-                <Button sx={{fontSize: 10}} onClick={() => {
-                    addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Reit"], {}), layer, false), lastLineNumber + 1);
-                }}
-                > Add Line
-                </Button>
-                <Button sx={{fontSize: 10}} onClick={() => {
-                    addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Assumption"], {}), layer + 1, true), lastLineNumber + 1);
-                }}
-                > Start Subproof </Button>
+                <Box>
+                    <Button sx={{fontSize: 10}} onClick={() => {
+                        addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Reit"], {}), layer, false), lastLineNumber + 1);
+                    }}
+                    > Add Line
+                    </Button>
+                    <Button sx={{fontSize: 10}} onClick={() => {
+                        addLine(new SentenceLine(new Sentence(), new Justification(Rule.derived["Assumption"], {}), layer + 1, true), lastLineNumber + 1);
+                    }}
+                    > Start Subproof </Button>
+                </Box>
             </Stack>
         </Box>
     )

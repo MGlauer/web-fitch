@@ -12,6 +12,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import CheckIcon from "@mui/icons-material/Check";
 import {IconButton} from "@mui/material";
+import Menu from "@mui/material/Menu";
 
 function readLinesText(text) {
     let vs = text.split(",");
@@ -35,8 +36,39 @@ function readLinesText(text) {
     return {text: text, processed: vs}
 }
 
-export default function ProofLineBox({lineNum, line, removeLine, updateFun}) {
+export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, addLineBefore, startSubproofAfter, updateFun}) {
     let sentenceLine = line;
+
+    const [contextMenu, setContextMenu] = React.useState(null);
+
+    const handleContextMenu = (event) => {
+        event.preventDefault();
+        setContextMenu(
+            contextMenu === null
+                ? {
+                    mouseX: event.clientX + 2,
+                    mouseY: event.clientY - 6,
+                }
+                : // repeated contextmenu when it is already open closes it with Chrome 84 on Ubuntu
+                  // Other native context menus might behave different.
+                  // With this behavior we prevent contextmenu from the backdrop to re-locale existing context menus.
+                null,
+        );
+
+        // Prevent text selection lost after opening the context menu on Safari and Firefox
+        const selection = document.getSelection();
+        if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+
+            setTimeout(() => {
+                selection.addRange(range);
+            });
+        }
+    };
+
+    const handleClose = () => {
+        setContextMenu(null);
+    };
 
     const handleSentenceChange = (event) => {
         let sen;
@@ -100,7 +132,7 @@ export default function ProofLineBox({lineNum, line, removeLine, updateFun}) {
     }
 
     return (
-        <Box sx={{width: 1}}>
+        <Box sx={{width: 1}} onContextMenu={handleContextMenu} style={{ cursor: 'context-menu' }}>
             <Grid sx={{justifyContent: "flex-end", alignItems: "flex-end",}}container>
                 <Grid size="grow">
                     <TextField sx={{width: "100%"}}
@@ -120,5 +152,20 @@ export default function ProofLineBox({lineNum, line, removeLine, updateFun}) {
                 </IconButton>
                 <Grid size={1}>{lineNum} </Grid>
             </Grid>
+            <Menu
+                open={contextMenu !== null}
+                onClose={handleClose}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                    contextMenu !== null
+                        ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+                        : undefined
+                }
+            >
+                <MenuItem onClick={() => {handleClose();removeLine()}}>Delete Line</MenuItem>
+                <MenuItem disabled={addLineBefore===undefined} onClick={() => {handleClose();addLineBefore()}}>Add Line Before</MenuItem>
+                <MenuItem onClick={() => {handleClose();addLineAfter()}}>Add Line After</MenuItem>
+                <MenuItem onClick={() => {handleClose();startSubproofAfter()}}>Start Subproof After</MenuItem>
+            </Menu>
         </Box>)
 }
