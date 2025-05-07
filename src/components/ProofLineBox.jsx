@@ -71,7 +71,7 @@ export default function ProofLineBox({lineNum, line, removeLine, updateFun}) {
                     label="Rule"
                     value={sentenceLine.justification.rule.label}
                     variant="standard">
-                    {Object.keys(Rule.derived).map((x) => (<MenuItem value={x}>{x}</MenuItem>))}
+                    {Object.keys(Rule.derived).filter((x) => x!=="Assumption").map((x) => (<MenuItem value={x}>{x}</MenuItem>))}
                 </Select>
             </Grid>),
             (<Grid size={1}>
