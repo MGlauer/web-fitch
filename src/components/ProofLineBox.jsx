@@ -81,17 +81,17 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
             else
                 throw error
         }
-        updateFun(new SentenceLine(text, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption, e, sentenceLine.ruleError));
+        updateFun(new SentenceLine(text, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption, e));
     }
 
     const handleSelectChange = (event) => {
         const newJustification = new Justification(Rule.derived[event.target.value], sentenceLine.justification.lines)
-        updateFun(new SentenceLine(sentenceLine.rawString, newJustification, sentenceLine.level, sentenceLine.isAssumption, sentenceLine.parseError, sentenceLine.ruleError));
+        updateFun(new SentenceLine(sentenceLine.rawString, newJustification, sentenceLine.level, sentenceLine.isAssumption, sentenceLine.parseError));
     };
 
     const handleLinesChange = (event) => {
         const newJustification = new Justification(sentenceLine.justification.rule, readLinesText(event.target.value))
-        updateFun(new SentenceLine(sentenceLine.rawString, newJustification, sentenceLine.level, sentenceLine.isAssumption, sentenceLine.parseError, sentenceLine.ruleError));
+        updateFun(new SentenceLine(sentenceLine.rawString, newJustification, sentenceLine.level, sentenceLine.isAssumption, sentenceLine.parseError));
     };
 
 
