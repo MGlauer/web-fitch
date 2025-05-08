@@ -47,7 +47,7 @@ function App() {
         <Box sx={{width: '100%'}}>
             <h1>WebFitch</h1>
             <Box>
-                If you find any bugs or have any other requests, feel frer to let us know on <a href="https://github.com/MGlauer/web-fitch/issues">GitHub</a>.
+                If you find any bugs or have any other requests, feel free to let us know on <a href="https://github.com/MGlauer/web-fitch/issues">GitHub</a>.
             </Box>
             <Paper sx={{width: '100%'}}>
                 <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
