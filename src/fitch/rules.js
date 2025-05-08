@@ -18,12 +18,13 @@ function getSubproof(proofLines, start, end) {
     return buffer.map((x) => x.sentence)
 }
 
-function isAvailable(lines, referencedLineIndex, targetLineIndex){
+function isAvailable(lines, referencedLineIndex, targetLineIndex, premiseEnd){
     const referencedLine = lines[referencedLineIndex];
     const layer = referencedLine.level;
-    for(let i=referencedLineIndex; i<lines.length; i++){
+    const start = referencedLine > premiseEnd?referencedLine:premiseEnd
+    for(let i=start; i<lines.length; i++){
         const li = lines[i]
-        if (li.level < layer || ((layer === li.level) && li.isAssumption)) {
+        if (li.level < layer || ((layer === li.level) && li.isAssumption && i !== start)) {
             return false
         }
         if(i === targetLineIndex)
@@ -32,13 +33,13 @@ function isAvailable(lines, referencedLineIndex, targetLineIndex){
     return false
 }
 
-function resolveReference(proofLines, reference, target_line){
+function resolveReference(proofLines, reference, target_line, premiseEnd){
     if(reference instanceof Array) {
-        if (!isAvailable(proofLines, reference[0], target_line))
+        if (!isAvailable(proofLines, reference[0], target_line, premiseEnd))
             throw new RuleError(`Subproof [${reference[0]+1},${reference[1]+1}] is not available in line ${target_line+1}`)
         return getSubproof(proofLines, reference[0], reference[1])
     } else {
-        if (!isAvailable(proofLines, reference, target_line))
+        if (!isAvailable(proofLines, reference, target_line, premiseEnd))
             throw new RuleError(`Line ${reference+1} is not available in line ${target_line+1}`)
         return proofLines[reference].sentence
     }
@@ -50,13 +51,13 @@ export class Rule {
     static derived = [];
     static label = "";
 
-    static check(proof, lines, target, target_line) {
+    static check(proof, lines, target, target_line, premiseEnd) {
 
         try{
             if(!lines){
                 throw new RuleError("No referenced lines")
             }
-            this._check(lines.map((x) => resolveReference(proof, x, target_line)), target)
+            this._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
         } catch (error) {
             if(error instanceof RuleError){
                 error.message =  `[ERROR applying ${this.label} to lines ${lines?lines.map((x)=>x+1).join(','):lines}]: ${error.message}`

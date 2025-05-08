@@ -14,8 +14,8 @@ export class SentenceLine {
         return parse(this.rawString)
     }
 
-    check(lines, targetLine) {
-        return this.justification.rule.check(lines, this.justification.lines.processed, this.sentence, targetLine)
+    check(lines, targetLine, premiseEnd) {
+        return this.justification.rule.check(lines, this.justification.lines.processed, this.sentence, targetLine, premiseEnd)
     }
 }
 
