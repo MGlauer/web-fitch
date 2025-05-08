@@ -64,6 +64,12 @@ export class UnarySentence extends Sentence {
         return UnarySentence(this.op, this.right.substitute(vari, cons))
     }
 
+    equals(other){
+        if(!(other instanceof UnarySentence))
+            return false
+        return (other.op === this.op) && (this.right.equals(other.right))
+    }
+
 }
 
 export class QuantifiedSentence extends Sentence {
