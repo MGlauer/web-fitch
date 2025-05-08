@@ -65,7 +65,6 @@ export default function FitchBox() {
         setLines([...lines])
     }
 
-    console.log(lines)
     return (
         <Box>
             <Box sx={{overflow: "auto"}}>
