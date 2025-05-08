@@ -5,6 +5,7 @@ import { FalsumElim } from "../../src/fitch/rules.js";
 describe("falsum elimination with parsing", () => {
     const testcases = [
             [["#"], "A"],
+            [["#"], "P(a)"],
     ]
     ruleTestWithParser(FalsumElim, testcases)
 });

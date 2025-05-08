@@ -91,6 +91,14 @@ export class QuantifiedSentence extends Sentence {
             return QuantifiedSentence(this.quant, this.variable, this.right.substitute(vari, cons))
         }
     }
+
+    equals(other){
+        return (
+            (other instanceof QuantifiedSentence) &&
+            other.quant === this.quant &&
+            other.variable === this.variable &&
+            this.right.equals(other.right))
+    }
 }
 
 export class BinarySentence extends Sentence {
@@ -161,6 +169,10 @@ export class Falsum extends Sentence {
         return '\u22A5';
     }
 
+    equals(other) {
+        return other instanceof Falsum
+    }
+
 }
 
 export class Atom extends Sentence {
@@ -176,6 +188,19 @@ export class Atom extends Sentence {
 
     substitute(vari, cons) {
         return Atom(this.predicate, this.terms.map((x) => x.substitute(vari, cons)));
+    }
+
+    equals(other){
+        if(!(other instanceof Atom))
+            return false
+
+        if(this.terms.length !== other.terms.length)
+            return false
+
+        if (other.predicate !== this.predicate)
+            return
+
+        return this.terms.every((x,i) => x.equals(other.terms[i]))
     }
 
 }
@@ -214,6 +239,19 @@ export class FunctionTerm extends Term {
         return Atom(this.fun, this.terms.map((x) => x.substitute(vari, cons)));
     }
 
+    equals(other){
+        if(!(other instanceof FunctionTerm))
+            return false
+
+        if(this.terms.length !== other.terms.length)
+            return false
+
+        if (other.fun !== this.fun)
+            return
+
+        return this.terms.every((x,i) => x.equals(other.terms[i]))
+    }
+
 }
 
 export class Constant extends Term {
@@ -224,6 +262,12 @@ export class Constant extends Term {
 
     get text() {
         return this.name
+    }
+
+    equals(other){
+        if(!(other instanceof Constant))
+            return false
+        return this.name === other.name
     }
 }
 
@@ -240,6 +284,13 @@ export class Variable extends Term {
             return this
         }
     }
+
+    equals(other){
+        if(!(other instanceof Variable))
+            return false
+        return this.name === other.name
+    }
+
 }
 
 

@@ -32,12 +32,12 @@ PSen
  / a:Atom
 
 Atom
-  = pred:predicateSym par:("(" (Term|1..,","|)  ")")?  {if(!par){return {type:"atom", const:pred};}else{return {type: "pred", data:{pred:pred, terms:par[1]}}}; }
+  = pred:predicateSym par:("(" (Term|1..,","|)  ")")?  {if(!par){return {type:"atom", const:pred};}else{return {type: "pred", pred:pred, terms:par[1]}}; }
   / '#' {return {type:"falsum"}}
   / '\u22A5' {return {type:"falsum"}}
 
 Term
-	= fun:functionConVarSym par:("(" (Term|1..,","|)  ")")?  {if(!par){return {type:"const", const:fun};}else{return {type: "fun", data:{fun:fun, terms:par[1]}};}}
+	= fun:functionConVarSym par:("(" (Term|1..,","|)  ")")?  {if(!par){return {type:"const", const:fun};}else{return {type: "fun", fun:fun, terms:par[1]};}}
 
 predicateSym
   = $([A-uw-z][A-uw-z]*)

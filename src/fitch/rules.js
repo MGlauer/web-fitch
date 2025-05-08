@@ -470,7 +470,7 @@ export class BiconditionalIntro extends Rule {
             throw new RuleError("The assumption of one subproof must the conclusion of the other.");
         }
 
-        if (!target.equals(new BinarySentence(a1, BinaryOp.BIMPL, a2))) {
+        if (!(target.left.equals(a1) && target.right.equals(a2)) && !(target.left.equals(a2) && target.right.equals(a1)) ) {
             throw new RuleError("The biconditional being derived must be composed of the formulas on the rule lines.");
         }
     }

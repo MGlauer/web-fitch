@@ -5,6 +5,7 @@ import { ConditionalIntro } from "../../src/fitch/rules.js";
 describe("conditional introduction with parsing", () => {
     const testcases = [
             [[["A","B"]], "A>B"],
+            [[["P(a)","P(b)"]], "P(a)>P(b)"],
     ]
     ruleTestWithParser(ConditionalIntro, testcases)
 });

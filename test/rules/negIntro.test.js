@@ -4,7 +4,7 @@ import { NegationIntro } from "../../src/fitch/rules.js";
 
 describe("negation introduction with parsing", () => {
     const testcases = [
-            [[["A","#"]], "~A"],
+            [[["P(a)","#"]], "~P(a)"],
     ]
     ruleTestWithParser(NegationIntro, testcases)
 });
