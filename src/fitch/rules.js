@@ -19,23 +19,43 @@ function getSubproof(proofLines, start, end) {
 }
 
 function isAvailable(lines, referencedLineIndex, targetLineIndex, premiseEnd){
-    const referencedLine = lines[referencedLineIndex];
-    const layer = referencedLine.level;
-    const start = referencedLine > premiseEnd?referencedLine:premiseEnd
-    for(let i=start; i<lines.length; i++){
+    if(!(referencedLineIndex instanceof Array) && referencedLineIndex < premiseEnd)
+        return true
+    if(targetLineIndex >= lines.length || referencedLineIndex ===targetLineIndex)
+        return false
+    let availablePerLayer = [[]]
+    for(let i=premiseEnd; i<=targetLineIndex; i++){
         const li = lines[i]
-        if (li.level < layer || ((layer === li.level) && li.isAssumption && i !== start)) {
-            return false
+        if(li.isAssumption){
+            if(availablePerLayer.length-1 < li.level){ // A new, lower subproof
+                availablePerLayer.push([i])
+            } else {
+                const finishedSubproof = availablePerLayer.pop()
+                availablePerLayer[availablePerLayer.length-1].push([finishedSubproof[0],i]) // This subproof is now available
+            }
+        } else {
+            if(li.level < availablePerLayer.length-1){
+                const finishedSubproof = availablePerLayer.pop()
+                availablePerLayer[availablePerLayer.length-1].push([finishedSubproof[0],i-1])
+            }
+            availablePerLayer[availablePerLayer.length-1].push(i)
         }
-        if(i === targetLineIndex)
-            return true
     }
-    return false
+    return availablePerLayer.flat().some((x)=>referenceEquals(x, referencedLineIndex))
+}
+
+function referenceEquals(r1,r2){
+    if((r1 instanceof Array) !== (r2 instanceof Array))
+        return false
+    if(r1 instanceof Array)
+        return r1.every((x,i) => x === r2[i])
+    else
+        return r1 === r2
 }
 
 function resolveReference(proofLines, reference, target_line, premiseEnd){
     if(reference instanceof Array) {
-        if (!isAvailable(proofLines, reference[0], target_line, premiseEnd))
+        if (!isAvailable(proofLines, reference, target_line, premiseEnd))
             throw new RuleError(`Subproof [${reference[0]+1},${reference[1]+1}] is not available in line ${target_line+1}`)
         return getSubproof(proofLines, reference[0], reference[1])
     } else {
