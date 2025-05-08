@@ -407,7 +407,7 @@ export class FalsumIntro extends Rule {
         assertLine(a)
         assertLine(b)
 
-        if (target instanceof Falsum) {
+        if (!(target instanceof Falsum)) {
             throw new RuleError("The formula being derived must be the absurdity.");
         }
 
