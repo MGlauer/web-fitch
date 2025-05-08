@@ -36,7 +36,7 @@ export default function SentenceComponent({sentence, updateSentence, error}){
                    onChange={(event) => updateSentence(event.target.value)}
                    onFocus={() => setInFocus(true)}
                    onBlur={() => setInFocus(false)}
-                   value={sentence.text}/>
+                   value={sentence}/>
             {inFocus?(<ButtonGroup size="small" >
                 {CharButton("\u2227")}
                 {CharButton("\u2228")}
