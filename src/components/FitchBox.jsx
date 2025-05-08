@@ -57,7 +57,7 @@ export default function FitchBox() {
 
             } catch (error) {
                 if(error instanceof  RuleError)
-                    newLine.error = error.message
+                    newLine.ruleError = error.message
                 else
                     throw error
             }

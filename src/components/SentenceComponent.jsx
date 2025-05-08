@@ -8,13 +8,13 @@ import Stack from '@mui/material/Stack';
 import * as React from "react";
 
 
-export default function SentenceComponent({sentence, updateSentence}){
+export default function SentenceComponent({sentence, updateSentence, error}){
     const [inFocus, setInFocus] = React.useState(false)
 
     function addCharacter(c){
         function inner(event){
             event.preventDefault()
-            updateSentence(sentence.text+c)
+            updateSentence(sentence+c)
         }
         return inner;
     }
@@ -36,15 +36,15 @@ export default function SentenceComponent({sentence, updateSentence}){
                    onChange={(event) => updateSentence(event.target.value)}
                    onFocus={() => setInFocus(true)}
                    onBlur={() => setInFocus(false)}
-                   value={sentence.text}/>
+                   value={sentence}/>
             {inFocus?(<ButtonGroup size="small" >
                 {CharButton("\u2227")}
                 {CharButton("\u2228")}
                 {CharButton("\u2192")}
                 {CharButton("\u2194")}
                 {CharButton("\u00AC")}
-                {CharButton("\u2227")}
+                {CharButton("\u22A5")}
             </ButtonGroup>):<></>}
-            <FormHelperText error={true}>{sentence.error}</FormHelperText>
+            <FormHelperText error={true}>{error}</FormHelperText>
         </Stack>)
 }
