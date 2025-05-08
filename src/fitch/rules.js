@@ -19,10 +19,10 @@ function getSubproof(proofLines, start, end) {
 }
 
 function isAvailable(lines, referencedLineIndex, targetLineIndex){
-    const referencedLine = getLine(lines, referencedLineIndex);
+    const referencedLine = lines[referencedLineIndex];
     const layer = referencedLine.level;
     for(let i=referencedLineIndex; i<lines.length; i++){
-        const li = getLine(lines,i)
+        const li = lines[i]
         if (li.level < layer || ((layer === li.level) && li.isAssumption)) {
             return false
         }
@@ -35,11 +35,11 @@ function isAvailable(lines, referencedLineIndex, targetLineIndex){
 function resolveReference(proofLines, reference, target_line){
     if(reference instanceof Array) {
         if (!isAvailable(proofLines, reference[0], target_line))
-            throw new RuleError(`Subproof ${reference} is not available in line ${target_line}`)
+            throw new RuleError(`Subproof [${reference[0]+1},${reference[1]+1}] is not available in line ${target_line+1}`)
         return getSubproof(proofLines, reference[0], reference[1])
     } else {
         if (!isAvailable(proofLines, reference, target_line))
-            throw new RuleError(`Line ${reference} is not available in line ${target_line}`)
+            throw new RuleError(`Line ${reference+1} is not available in line ${target_line+1}`)
         return proofLines[reference].sentence
     }
 }
