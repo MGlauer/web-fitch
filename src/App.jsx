@@ -6,6 +6,7 @@ import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import FitchBox from "./components/FitchBox.jsx";
 import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
 
 function CustomTabPanel(props) {
     const {children, value, index, ...other} = props;
@@ -45,7 +46,7 @@ function App() {
 
     return (
         <Box sx={{width: '100%'}}>
-            <h1>WebFitch</h1>
+            <Typography variant="h3">WebFitch<Typography variant="caption">(v{APP_VERSION})</Typography></Typography>
             <Box>
                 If you find any bugs or have any other requests, feel free to let us know on <a href="https://github.com/MGlauer/web-fitch/issues">GitHub</a>.
             </Box>
