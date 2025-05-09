@@ -188,8 +188,8 @@ export class ConjunctionIntro extends Rule {
             assertLine(r)
             for(const can of candidates) {
                 const idx = conjuncts.findIndex((x) => can.equals(x))
-                if (idx === undefined)
-                    throw new RuleError(`${r} is not a conjunct of the formula being derived.`);
+                if (idx === undefined || idx === -1)
+                    throw new RuleError(`${r} is not a conjunct of the formula being derived or has already been used.`);
                 conjuncts.splice(idx, 1)
             }
         }
