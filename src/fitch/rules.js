@@ -19,6 +19,8 @@ function getSubproof(proofLines, start, end) {
 }
 
 function isAvailable(lines, referencedLineIndex, targetLineIndex, premiseEnd){
+    if(referencedLineIndex < 0)
+        return false
     if(!(referencedLineIndex instanceof Array) && referencedLineIndex < premiseEnd)
         return true
     if(targetLineIndex >= lines.length || referencedLineIndex ===targetLineIndex)
