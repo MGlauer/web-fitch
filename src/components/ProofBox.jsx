@@ -39,11 +39,16 @@ export default function ProofBox({
             />))
     }
     if (isTopLevel) {
-        premiseBlock.push(<Button sx={{fontSize: 10}} onClick={() => {
+        premiseBlock.push(
+            <Box sx={{
+                display: 'flex',
+                justifyContent: "flex-start",
+                alignItems: "flex-start"
+            }}><Button sx={{fontSize: 10}} onClick={() => {
             setPremisesEnd(premisesEnd + 1)
             addLine(new SentenceLine("", new Justification(Rule.derived["Reit"], {}), layer, true), premises.length > 0 ? premises[premises.length - 1][0] + 1 : 0);
         }}
-        >Add Premise</Button>)
+            >Add Premise</Button></Box>)
     }
 
     function addLineAt(i){
@@ -104,13 +109,16 @@ export default function ProofBox({
             <Stack direction="column" sx={{
                 borderColor: "primary.dark",
                 borderLeft: 1,
-                justifyContent: "flex-start",
-                alignItems: "flex-start",
+                display: "block"
             }}>
                 {premiseBlock}
                 <Divider sx={{bgcolor: "primary.dark"}} flexItem/>
                 {lineElements}
-                <Box>
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: "flex-start",
+                    alignItems: "flex-start"
+                }}>
                     <Button sx={{fontSize: 10}} onClick={() => {
                         addLine(new SentenceLine("", new Justification(Rule.derived["Reit"], {}), layer, false), lastLineNumber + 1);
                     }}
