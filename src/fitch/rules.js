@@ -433,7 +433,8 @@ export class FalsumIntro extends Rule {
             throw new RuleError("The formula being derived must be the absurdity.");
         }
 
-        if (!((b instanceof UnarySentence) && b.op === UnaryOp.NEG && b.right.equals(a))) {
+        if (!(((b instanceof UnarySentence) && b.op === UnaryOp.NEG && b.right.equals(a)) ||
+              ((a instanceof UnarySentence) && a.op === UnaryOp.NEG && a.right.equals(b)))) {
             throw new RuleError(`Second referenced line must be the negation of the first referenced line.`);
         }
     }
