@@ -52,7 +52,7 @@ export default function FitchBox() {
             try {
                 newLine.error = ""
                 if(!newLine.isAssumption)
-                    newLine.check(lines, i)
+                    newLine.check(lines, i, premisesEnd)
                 newLine.isValid = true;
 
             } catch (error) {

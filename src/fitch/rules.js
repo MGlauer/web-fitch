@@ -18,28 +18,49 @@ function getSubproof(proofLines, start, end) {
     return buffer.map((x) => x.sentence)
 }
 
-function isAvailable(lines, referencedLineIndex, targetLineIndex){
-    const referencedLine = getLine(lines, referencedLineIndex);
-    const layer = referencedLine.level;
-    for(let i=referencedLineIndex; i<lines.length; i++){
-        const li = getLine(lines,i)
-        if (li.level < layer || ((layer === li.level) && li.isAssumption)) {
-            return false
+function isAvailable(lines, referencedLineIndex, targetLineIndex, premiseEnd){
+    if(!(referencedLineIndex instanceof Array) && referencedLineIndex < premiseEnd)
+        return true
+    if(targetLineIndex >= lines.length || referencedLineIndex ===targetLineIndex)
+        return false
+    let availablePerLayer = [[]]
+    for(let i=premiseEnd; i<=targetLineIndex; i++){
+        const li = lines[i]
+        if(li.isAssumption){
+            if(availablePerLayer.length-1 < li.level){ // A new, lower subproof
+                availablePerLayer.push([i])
+            } else {
+                const finishedSubproof = availablePerLayer.pop()
+                availablePerLayer[availablePerLayer.length-1].push([finishedSubproof[0],i]) // This subproof is now available
+            }
+        } else {
+            if(li.level < availablePerLayer.length-1){
+                const finishedSubproof = availablePerLayer.pop()
+                availablePerLayer[availablePerLayer.length-1].push([finishedSubproof[0],i-1])
+            }
+            availablePerLayer[availablePerLayer.length-1].push(i)
         }
-        if(i === targetLineIndex)
-            return true
     }
-    return false
+    return availablePerLayer.flat().some((x)=>referenceEquals(x, referencedLineIndex))
 }
 
-function resolveReference(proofLines, reference, target_line){
+function referenceEquals(r1,r2){
+    if((r1 instanceof Array) !== (r2 instanceof Array))
+        return false
+    if(r1 instanceof Array)
+        return r1.every((x,i) => x === r2[i])
+    else
+        return r1 === r2
+}
+
+function resolveReference(proofLines, reference, target_line, premiseEnd){
     if(reference instanceof Array) {
-        if (!isAvailable(proofLines, reference[0], target_line))
-            throw new RuleError(`Subproof ${reference} is not available in line ${target_line}`)
+        if (!isAvailable(proofLines, reference, target_line, premiseEnd))
+            throw new RuleError(`Subproof [${reference[0]+1},${reference[1]+1}] is not available in line ${target_line+1}`)
         return getSubproof(proofLines, reference[0], reference[1])
     } else {
-        if (!isAvailable(proofLines, reference, target_line))
-            throw new RuleError(`Line ${reference} is not available in line ${target_line}`)
+        if (!isAvailable(proofLines, reference, target_line, premiseEnd))
+            throw new RuleError(`Line ${reference+1} is not available in line ${target_line+1}`)
         return proofLines[reference].sentence
     }
 }
@@ -50,13 +71,13 @@ export class Rule {
     static derived = [];
     static label = "";
 
-    static check(proof, lines, target, target_line) {
+    static check(proof, lines, target, target_line, premiseEnd) {
 
         try{
             if(!lines){
                 throw new RuleError("No referenced lines")
             }
-            this._check(lines.map((x) => resolveReference(proof, x, target_line)), target)
+            this._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
         } catch (error) {
             if(error instanceof RuleError){
                 error.message =  `[ERROR applying ${this.label} to lines ${lines?lines.map((x)=>x+1).join(','):lines}]: ${error.message}`
