@@ -31,12 +31,13 @@ function isAvailable(lines, referencedLineIndex, targetLineIndex, premiseEnd){
                 availablePerLayer.push([i])
             } else {
                 const finishedSubproof = availablePerLayer.pop()
-                availablePerLayer[availablePerLayer.length-1].push([finishedSubproof[0],i]) // This subproof is now available
+                availablePerLayer[availablePerLayer.length-1].push([finishedSubproof[0],finishedSubproof[finishedSubproof.length-1]]) // This subproof is now available
+                availablePerLayer.push([i])
             }
         } else {
             if(li.level < availablePerLayer.length-1){
                 const finishedSubproof = availablePerLayer.pop()
-                availablePerLayer[availablePerLayer.length-1].push([finishedSubproof[0],i-1])
+                availablePerLayer[availablePerLayer.length-1].push([finishedSubproof[0],finishedSubproof[finishedSubproof.length-1]])
             }
             availablePerLayer[availablePerLayer.length-1].push(i)
         }
