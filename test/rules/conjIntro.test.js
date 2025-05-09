@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { PropAtoms, BinaryOp, BinarySentence} from "../../src/fitch/structure.js";
 import {ConditionalElim, ConjunctionIntro} from "../../src/fitch/rules.js";
-import {ruleTestWithParser} from "./base.js";
+import {invalidRuleTestWithParser, ruleTestWithParser,} from "./base.js";
 
 describe("simple conjunction introduction", () => {
     const a1 = new PropAtoms("A"), a2 = new PropAtoms("B"), a3 = new PropAtoms("C"), a4 = new PropAtoms("D")
@@ -20,9 +20,11 @@ describe("simple conjunction introduction", () => {
     }
 });
 
-describe("conjunction introduction with parsing", () => {
-    const testcases = [
-        [["P(a)","Q(a)"], "P(a)&Q(a)"],
-    ]
-    ruleTestWithParser(ConjunctionIntro, testcases)
-});
+// Negative tests
+
+const faultyCases = [
+    [["A","A"], "A&B"]
+]
+invalidRuleTestWithParser(ConjunctionIntro, faultyCases)
+
+
