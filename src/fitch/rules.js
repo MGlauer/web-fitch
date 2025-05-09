@@ -183,7 +183,7 @@ export class ConjunctionIntro extends Rule {
 
         for(const r of references){
             let candidates = [];
-            if(r.isAssociative)
+            if(r.isAssociative  && r.op === target.op)
                 candidates = r.associativeParts
             else
                 candidates = [r]
