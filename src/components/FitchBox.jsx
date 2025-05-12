@@ -50,7 +50,8 @@ export default function FitchBox() {
         for (let i = premisesEnd; i < lines.length; i++) {
             let newLine = lines[i]
             try {
-                newLine.error = ""
+                newLine.ruleError = ""
+                newLine.parseError = ""
                 if(!newLine.isAssumption)
                     newLine.check(lines, i, premisesEnd)
                 newLine.isValid = true;
