@@ -58,7 +58,10 @@ export default function FitchBox() {
             } catch (error) {
                 if(error instanceof  RuleError)
                     newLine.ruleError = error.message
-                else
+                else if(error instanceof SyntaxError)
+                {
+                    newLine.parseError = error.message
+                } else
                     throw error
             }
         }
