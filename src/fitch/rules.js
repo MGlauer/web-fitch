@@ -69,6 +69,16 @@ function resolveReference(proofLines, reference, target_line, premiseEnd){
 }
 
 
+function printLines(lines){
+    let parts = []
+    for(const l of lines){
+        if(l instanceof Array)
+            parts.push(`${l[0]+1}-${l[1]+1}`)
+        else
+            parts.push(`${l+1}`)
+    }
+    return parts.join(",")
+}
 
 export class Rule {
     static derived = [];
@@ -83,7 +93,7 @@ export class Rule {
             this._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
         } catch (error) {
             if(error instanceof RuleError){
-                error.message =  `[ERROR applying ${this.label} to lines ${lines?lines.map((x)=>x+1).join(','):lines}]: ${error.message}`
+                error.message =  `[ERROR applying ${this.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
             }
             throw error
         }
