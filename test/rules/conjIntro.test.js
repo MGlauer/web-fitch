@@ -23,7 +23,12 @@ describe("simple conjunction introduction", () => {
 // Negative tests
 
 const faultyCases = [
-    [["A","A"], "A&B"]
+    [["A","A"], "A&B"],
+    [["A","C"], "A&B"],
+    [["C","B"], "A&B"],
+    [["A","B"], "C&B"],
+    [["A","B"], "A&C"],
+    [[], "A"],
 ]
 invalidRuleTestWithParser(ConjunctionIntro, faultyCases)
 
