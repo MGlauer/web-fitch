@@ -48,7 +48,7 @@ function App() {
         <Box sx={{width: '100%'}}>
             <Typography variant="h3">WebFitch<Typography variant="caption">(v{APP_VERSION})</Typography></Typography>
             <Box>
-                If you find any bugs or have any other requests, feel free to let us know on <a href="https://github.com/MGlauer/web-fitch/issues">GitHub</a>.
+                If you find any bugs or have any other requests, feel free to let us know on <a href="https://github.com/MGlauer/web-fitch/issues">GitHub</a>. Note: You can also add new lines or subproofs by right-clicking an existing line.
             </Box>
             <Paper sx={{width: '100%'}}>
                 <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
