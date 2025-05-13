@@ -356,12 +356,21 @@ export class DisjunctionElim extends Rule {
             if(!consequence.equals(target)){
                 throw new RuleError(`Subproof has last line ${consequence.text}, which is not the target`)
             }
-            const idx = cases.findIndex((x)=>assumption.equals(x))
-            if(idx === -1){
-                // Todo: Can we just ignore this case?
-                throw new RuleError(`Subproof has assumption ${assumption.text}, which is not a disjunct in ${dis.text}`)
+
+            let parts = []
+            if((assumption instanceof BinarySentence) && (assumption.op === BinaryOp.OR))
+                parts = assumption.associativeParts
+            else
+                parts = [assumption]
+
+            for(const p of parts) {
+                const idx = cases.findIndex((x)=>p.equals(x))
+                if (idx === -1) {
+                    // Todo: Can we just ignore this case?
+                    throw new RuleError(`Subproof has assumption ${p.text}, which is not a disjunct in ${dis.text}`)
+                }
+                cases.splice(idx, 1);
             }
-            cases.splice(idx, 1);
         }
 
         if(cases.length !== 0)
