@@ -2,7 +2,7 @@ import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import ProofBox from "./ProofBox.jsx"
-import {SentenceLine} from "../fitch/proofstructure.js";
+import {Justification, SentenceLine} from "../fitch/proofstructure.js";
 import {RuleError} from "../fitch/rules.js"
 
 export default function FitchBox() {
@@ -34,7 +34,32 @@ export default function FitchBox() {
             } else {
                 setPremisesEnd(premisesEnd-1)
             }
-            setLines([...lines.slice(0, removeIndex), ...lines.slice(removeEnd + 1)])
+
+            // Adapt references in following lines
+            const removedLines = removeEnd - removeEnd + 1
+            const followingLines = []
+            for(let i=removeEnd+1; i<lines.length; i++){
+                const l = lines[i]
+                if(l.justification.lines.processed) {
+                    let textParts = []
+                    let refs = []
+                    for (let j = 0; j < l.justification.lines.processed.length; j++) {
+                        let ref = l.justification.lines.processed[j]
+                        if (ref instanceof Array) {
+                            ref = [ref[0] - removedLines, ref[1] - removedLines]
+                            textParts.push(`${ref[0]+1}-${ref[1]+1}`)
+                        } else {
+                            ref = ref - removedLines
+                            textParts.push(ref+1)
+                        }
+                        refs.push(ref)
+                    }
+                    const j = new Justification(l.justification.rule, {processed: refs, text:textParts.join(",")})
+                    followingLines.push(new SentenceLine(l.rawString, j, l.level, l.isAssumption))
+                } else
+                    followingLines.push(l)
+            }
+            setLines([...lines.slice(0, removeIndex), ...followingLines])
         }
     }
 
