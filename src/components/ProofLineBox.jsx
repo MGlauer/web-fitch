@@ -97,7 +97,6 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
 
     let justForm = null;
     if (!sentenceLine.isAssumption) {
-        console.log(sentenceLine.justification)
         justForm = [
             (<Grid size={2}>
                 <Select

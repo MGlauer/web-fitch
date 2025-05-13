@@ -12,8 +12,34 @@ export default function FitchBox() {
     const premises = lines.entries().toArray().slice(0, premisesEnd);
     const proofLines = lines.entries().toArray().slice(premisesEnd);
 
+    function alterRefs(justification, alter){
+        if(justification.lines.processed) {
+            let textParts = []
+            let refs = []
+            for (let j = 0; j < justification.lines.processed.length; j++) {
+                let ref = justification.lines.processed[j]
+                if (ref instanceof Array) {
+                    ref = [alter(ref[0]), alter(ref[1])]
+                    textParts.push(`${ref[0]+1}-${ref[1]+1}`)
+                } else {
+                    ref = alter(ref)
+                    textParts.push(ref+1)
+                }
+                refs.push(ref)
+            }
+            return new Justification(justification.rule, {processed: refs, text:textParts.join(",")})
+        } else
+            return justification
+    }
+
+
     function addLine(line, insertIndex) {
-        setLines([...lines.slice(0, insertIndex), line, ...lines.slice(insertIndex)])
+
+        let followingLines = []
+        for(let i=insertIndex; i<lines.length; i++){
+            followingLines.push(new SentenceLine(lines[i].rawString, alterRefs(lines[i].justification, (j) => j>=insertIndex?j+1:j), lines[i].level, lines[i].isAssumption))
+        }
+        setLines([...lines.slice(0, insertIndex), line, ...followingLines])
     }
 
     function removeLineWrapper(removeIndex) {
@@ -36,28 +62,10 @@ export default function FitchBox() {
             }
 
             // Adapt references in following lines
-            const removedLines = removeEnd - removeEnd + 1
+            const removedLines = removeEnd - removeIndex + 1
             const followingLines = []
             for(let i=removeEnd+1; i<lines.length; i++){
-                const l = lines[i]
-                if(l.justification.lines.processed) {
-                    let textParts = []
-                    let refs = []
-                    for (let j = 0; j < l.justification.lines.processed.length; j++) {
-                        let ref = l.justification.lines.processed[j]
-                        if (ref instanceof Array) {
-                            ref = [ref[0] - removedLines, ref[1] - removedLines]
-                            textParts.push(`${ref[0]+1}-${ref[1]+1}`)
-                        } else {
-                            ref = ref - removedLines
-                            textParts.push(ref+1)
-                        }
-                        refs.push(ref)
-                    }
-                    const j = new Justification(l.justification.rule, {processed: refs, text:textParts.join(",")})
-                    followingLines.push(new SentenceLine(l.rawString, j, l.level, l.isAssumption))
-                } else
-                    followingLines.push(l)
+                followingLines.push(new SentenceLine(lines[i].rawString, alterRefs(lines[i].justification, (j) => j>=removeEnd?j-removedLines:j), lines[i].level, lines[i].isAssumption))
             }
             setLines([...lines.slice(0, removeIndex), ...followingLines])
         }
