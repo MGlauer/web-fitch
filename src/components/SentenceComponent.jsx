@@ -10,11 +10,17 @@ import * as React from "react";
 
 export default function SentenceComponent({sentence, updateSentence, error}){
     const [inFocus, setInFocus] = React.useState(false)
+    const [selectionStart, setSelectionStart] = React.useState();
+    const inputRef = React.useRef();
+
+    function updateSelectionStart(event) {
+        setSelectionStart(inputRef.current.selectionStart);
+    }
 
     function addCharacter(c){
         function inner(event){
             event.preventDefault()
-            updateSentence(sentence+c)
+            updateSentence(sentence.slice(0,selectionStart) + c + sentence.slice(selectionStart))
         }
         return inner;
     }
@@ -36,6 +42,8 @@ export default function SentenceComponent({sentence, updateSentence, error}){
                    onChange={(event) => updateSentence(event.target.value)}
                    onFocus={() => setInFocus(true)}
                    onBlur={() => setInFocus(false)}
+                   inputRef={inputRef}
+                   onSelect={updateSelectionStart}
                    value={sentence}/>
             {inFocus?(<ButtonGroup size="small" >
                 {CharButton("\u2227")}
