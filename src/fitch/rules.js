@@ -83,13 +83,19 @@ function printLines(lines){
 export class Rule {
     static derived = [];
     static label = "";
+    static isIdentityIntro = false;
 
     static check(proof, lines, target, target_line, premiseEnd) {
 
         try{
-            if(!lines){
+            if(!lines && !this.isIdentityIntro){
                 throw new RuleError("No referenced lines")
             }
+
+            if(!lines && this.isIdentityIntro){
+                lines = [] // Dummy value so check goes through
+            }
+
             this._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
         } catch (error) {
             if(error instanceof RuleError){
@@ -150,6 +156,29 @@ export class Assumption extends Rule {
     }
 
     static _check(references, target) {
+    }
+}
+
+// Id: Identity of variable
+export class Identity extends Rule {
+    static label = "\u003D-Intro";
+    static isIdentityIntro = true;
+    static {
+        register(this);
+    }
+
+    static _check(references, target){
+        if(references.length > 0){
+            throw new RuleError("Identity intro cannot have any lines.")
+        }
+
+        if(!(target instanceof BinarySentence) || (target.op !== BinaryOp.ID)){
+            throw new RuleError("Formula being derived must be an identity.")
+        }
+
+        if(!(target.left.equals(target.right))){
+            throw new RuleError("Left hand side does not equal right hand side.")
+        }
     }
 }
 

@@ -38,7 +38,7 @@ Atom
 
 Term
 	= fun:functionConVarSym par:("(" (Term|1..,","|)  ")")?  {if(!par){return {type:"const", const:fun};}else{return {type: "fun", fun:fun, terms:par[1]};}}
-
+  
 predicateSym
   = $([A-uw-z][A-uw-z]*)
 
@@ -50,10 +50,12 @@ binop
   / '|' {return "\u2228"}
   / '>' {return "\u2192"}
   / '<>' {return "\u2194"}
+  / '=' {return "\u003D"}
   / '\u2227'
   / '\u2228'
   / '\u2192'
   / '\u2194'
+  / '\u003D'
 
 neg
  = '~' {return "\u00AC";} / '\u00AC'
