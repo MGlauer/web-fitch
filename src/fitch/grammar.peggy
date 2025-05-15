@@ -35,6 +35,7 @@ Atom
   = pred:predicateSym par:("(" (Term|1..,","|)  ")")?  {if(!par){return {type:"atom", const:pred};}else{return {type: "pred", pred:pred, terms:par[1]}}; }
   / '#' {return {type:"falsum"}}
   / '\u22A5' {return {type:"falsum"}}
+   / l:Term "=" r:Term {return {type: "pred", pred:"=", terms:[l,r]}}
 
 Term
 	= fun:functionConVarSym par:("(" (Term|1..,","|)  ")")?  {if(!par){return {type:"const", const:fun};}else{return {type: "fun", fun:fun, terms:par[1]};}}
@@ -50,12 +51,10 @@ binop
   / '|' {return "\u2228"}
   / '>' {return "\u2192"}
   / '<>' {return "\u2194"}
-  / '=' {return "\u003D"}
   / '\u2227'
   / '\u2228'
   / '\u2192'
   / '\u2194'
-  / '\u003D'
 
 neg
  = '~' {return "\u00AC";} / '\u00AC'

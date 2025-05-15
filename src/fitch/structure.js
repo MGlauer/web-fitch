@@ -319,8 +319,7 @@ export const BinaryOp = {
     AND: "\u2227",
     OR: "\u2228",
     IMPL: "\u2192",
-    BIMPL: "\u2194",
-    ID: "\u003D"
+    BIMPL: "\u2194"
 };
 
 function readBinaryOp(input) {
@@ -333,8 +332,6 @@ function readBinaryOp(input) {
             return BinaryOp.IMPL
         case("\u2194"):
             return BinaryOp.BIMPL
-        case("\u003D"):
-            return BinaryOp.ID
         default:
             throw Error("Unknown input: " + input)
     }

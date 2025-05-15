@@ -1,4 +1,4 @@
-import {BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence} from './structure.js'
+import {Atom, BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence} from './structure.js'
 
 function getSubproof(proofLines, start, end) {
     let buffer = [];
@@ -172,11 +172,11 @@ export class Identity extends Rule {
             throw new RuleError("Identity intro cannot have any lines.")
         }
 
-        if(!(target instanceof BinarySentence) || (target.op !== BinaryOp.ID)){
+        if(!(target instanceof Atom) || (target.predicate !== "=")){
             throw new RuleError("Formula being derived must be an identity.")
         }
 
-        if(!(target.left.equals(target.right))){
+        if(!(target.terms[0].equals(target.terms[1]))){
             throw new RuleError("Left hand side does not equal right hand side.")
         }
     }
