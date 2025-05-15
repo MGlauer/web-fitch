@@ -19,6 +19,9 @@ const cases = [
     ["A>B", lif(A,B)],
     ["A<>B", liff(A,B)],
     ["A&(B&C)", and(A,and(B,C))],
+    ["A&(B|C)", and(A,or(B,C))],
+    ["A|(B&C)", or(A,and(B,C))],
+    ["A|(B|C)", or(A,or(B,C))],
 ]
 
 describe(`Reader test`, () => {

@@ -15,7 +15,8 @@ describe(`Negative reader test`, () => {
 const faultyIput = [
     "f(a)",
     "a",
-    "x"
+    "x",
+    "A|B&C"
 ]
 
 describe(`Invalid reader test`, () => {
