@@ -2,7 +2,7 @@ import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import ProofBox from "./ProofBox.jsx"
-import {SentenceLine} from "../fitch/proofstructure.js";
+import {Justification, SentenceLine} from "../fitch/proofstructure.js";
 import {RuleError} from "../fitch/rules.js"
 
 export default function FitchBox() {
@@ -12,8 +12,34 @@ export default function FitchBox() {
     const premises = lines.entries().toArray().slice(0, premisesEnd);
     const proofLines = lines.entries().toArray().slice(premisesEnd);
 
+    function alterRefs(justification, alter){
+        if(justification.lines.processed) {
+            let textParts = []
+            let refs = []
+            for (let j = 0; j < justification.lines.processed.length; j++) {
+                let ref = justification.lines.processed[j]
+                if (ref instanceof Array) {
+                    ref = [alter(ref[0]), alter(ref[1])]
+                    textParts.push(`${ref[0]+1}-${ref[1]+1}`)
+                } else {
+                    ref = alter(ref)
+                    textParts.push(ref+1)
+                }
+                refs.push(ref)
+            }
+            return new Justification(justification.rule, {processed: refs, text:textParts.join(",")})
+        } else
+            return justification
+    }
+
+
     function addLine(line, insertIndex) {
-        setLines([...lines.slice(0, insertIndex), line, ...lines.slice(insertIndex)])
+
+        let followingLines = []
+        for(let i=insertIndex; i<lines.length; i++){
+            followingLines.push(new SentenceLine(lines[i].rawString, alterRefs(lines[i].justification, (j) => j>=insertIndex?j+1:j), lines[i].level, lines[i].isAssumption))
+        }
+        setLines([...lines.slice(0, insertIndex), line, ...followingLines])
     }
 
     function removeLineWrapper(removeIndex) {
@@ -34,7 +60,14 @@ export default function FitchBox() {
             } else {
                 setPremisesEnd(premisesEnd-1)
             }
-            setLines([...lines.slice(0, removeIndex), ...lines.slice(removeEnd + 1)])
+
+            // Adapt references in following lines
+            const removedLines = removeEnd - removeIndex + 1
+            const followingLines = []
+            for(let i=removeEnd+1; i<lines.length; i++){
+                followingLines.push(new SentenceLine(lines[i].rawString, alterRefs(lines[i].justification, (j) => j>=removeEnd?j-removedLines:j), lines[i].level, lines[i].isAssumption))
+            }
+            setLines([...lines.slice(0, removeIndex), ...followingLines])
         }
     }
 

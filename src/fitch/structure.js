@@ -15,7 +15,7 @@ function process(input) {
         case("fun"):
             return new FunctionTerm(input.fun, input.terms.map((x) => process(x)))
         case("pred"):
-            return new FunctionTerm(input.pred, input.terms.map((x) => process(x)))
+            return new Atom(input.pred, input.terms.map((x) => process(x)))
         case("falsum"):
             return new Falsum()
         case("atom"):
@@ -198,7 +198,7 @@ export class Atom extends Sentence {
             return false
 
         if (other.predicate !== this.predicate)
-            return
+            return false
 
         return this.terms.every((x,i) => x.equals(other.terms[i]))
     }
@@ -220,8 +220,18 @@ export class PropAtoms extends Sentence {
     }
 }
 
-export class Term extends Atom {
+export class Term {
+    get text() {
+        throw "Not implemented"
+    }
 
+    equals(other){
+        throw "Not implemented"
+    }
+
+    substitute(vari, cons) {
+        throw "Not implemented"
+    }
 }
 
 export class FunctionTerm extends Term {

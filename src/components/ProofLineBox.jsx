@@ -113,7 +113,7 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
                            size="small"
                            error={sentenceLine.justification.lines.error}
                            helperText={sentenceLine.justification.lines.error ? sentenceLine.justification.lines.error : ""}
-                           value={sentenceLine.justification.lines.text}/>
+                           value={sentenceLine.justification.lines.text?sentenceLine.justification.lines.text:""}/>
             </Grid>)
         ]
     } else {
