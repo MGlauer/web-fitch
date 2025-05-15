@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import {ruleTestWithParser} from "./base.js"
-import { ConditionalIntro } from "../../src/fitch/rules.js";
+import {invalidRuleTestWithParser, ruleTestWithParser} from "./base.js"
+import {ConditionalElim, ConditionalIntro} from "../../src/fitch/rules.js";
 
 describe("conditional introduction with parsing", () => {
     const testcases = [
@@ -9,3 +9,12 @@ describe("conditional introduction with parsing", () => {
     ]
     ruleTestWithParser(ConditionalIntro, testcases)
 });
+
+const invalidTestcases = [
+    [[["C","B"]], "A>B"],
+    [[["A","C"]], "A>B"],
+    [[["A","B"]], "C>B"],
+    [[["A","B"]], "A>C"],
+]
+
+invalidRuleTestWithParser(ConditionalIntro, invalidTestcases)

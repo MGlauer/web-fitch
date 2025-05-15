@@ -1,10 +1,19 @@
 import { describe, it, expect } from "vitest";
-import {ruleTestWithParser} from "./base.js"
-import { NegationIntro } from "../../src/fitch/rules.js";
+import {invalidRuleTestWithParser, ruleTestWithParser} from "./base.js"
+import {NegationElim, NegationIntro} from "../../src/fitch/rules.js";
 
 describe("negation introduction with parsing", () => {
     const testcases = [
-            [[["P(a)","#"]], "~P(a)"],
+        [[["A","#"]], "~A"],
+        [[["P(a)","#"]], "~P(a)"],
     ]
     ruleTestWithParser(NegationIntro, testcases)
 });
+
+const invalidTestcases = [
+    [[["B","#"]], "~A"],
+    [[["A","B"]], "~A"],
+    [[["A","#"]], "~B"],
+]
+
+invalidRuleTestWithParser(NegationElim, invalidTestcases)
