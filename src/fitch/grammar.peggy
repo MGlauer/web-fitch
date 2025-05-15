@@ -40,7 +40,7 @@ Term
 	= fun:functionConVarSym par:("(" (Term|1..,","|)  ")")?  {if(!par){return {type:"const", const:fun};}else{return {type: "fun", fun:fun, terms:par[1]};}}
 
 predicateSym
-  = $([A-uw-z][A-uw-z]*)
+  = $([A-Z][A-z]*)
 
 functionConVarSym
   = $([a-z]+)

@@ -13,7 +13,7 @@ describe("simple conjunction introduction", () => {
         "~(A|~A)",
     ].map((x) => x.split("").map((y) => charmap[y]??y).join(""))
     for(const text of texts) {
-        it(`Roundtrip &{text}`, () => {
+        it(`Roundtrip ${text}`, () => {
             expect(parse(text).text).equals(text);
         });
     }
