@@ -5,10 +5,7 @@ import ProofBox from "./ProofBox.jsx"
 import {Justification, SentenceLine} from "../fitch/proofstructure.js";
 import {RuleError} from "../fitch/rules.js"
 
-export default function FitchBox() {
-    const [premisesEnd, setPremisesEnd] = React.useState(0);
-    const [lines, setLines] = React.useState([]);
-
+export default function FitchBox({premisesEnd, setPremisesEnd, lines, setLines}) {
     const premises = lines.entries().toArray().slice(0, premisesEnd);
     const proofLines = lines.entries().toArray().slice(premisesEnd);
 

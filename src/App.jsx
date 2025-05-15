@@ -5,6 +5,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import FitchBox from "./components/FitchBox.jsx";
+import LatexBox from "./components/LatexBox.jsx";
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 
@@ -44,6 +45,9 @@ function App() {
         setValue(newValue);
     };
 
+    const [premisesEnd, setPremisesEnd] = React.useState(0);
+    const [lines, setLines] = React.useState([]);
+
     return (
         <Box sx={{width: '100%'}}>
             <Typography variant="h3">WebFitch<Typography variant="caption">(v{APP_VERSION})</Typography></Typography>
@@ -54,14 +58,16 @@ function App() {
                 <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
                     <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
                         <Tab label="Proof" {...a11yProps(0)} />
+                        <Tab label="Latex" {...a11yProps(1)} />
                     </Tabs>
                 </Box>
                 <CustomTabPanel value={value} index={0}>
-                    <FitchBox/>
+                    <FitchBox premisesEnd={premisesEnd} setPremisesEnd={setPremisesEnd} lines={lines} setLines={setLines}/>
                 </CustomTabPanel>
-
+                <CustomTabPanel value={value} index={1}>
+                    <LatexBox premisesEnd={premisesEnd} lines={lines}/>
+                </CustomTabPanel>
             </Paper>
-
         </Box>
     )
 }
