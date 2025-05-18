@@ -1,4 +1,4 @@
-import {BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence} from './structure.js'
+import {Atom, BinaryOp, BinarySentence, Falsum, QuantifiedSentence, Quantor, Sentence, UnaryOp, UnarySentence} from './structure.js'
 
 function getSubproof(proofLines, start, end) {
     let buffer = [];
@@ -152,6 +152,51 @@ export class Assumption extends Rule {
     }
 
     static _check(references, target) {
+    }
+}
+
+export class ExistenceIntro extends Rule {
+
+    static label = "\u2203-Intro";
+    static {
+        register(this);
+    }
+
+    static _check(references, target) {
+        if (references.length !== 1) {
+            throw new RuleError('Rule must be applied to one line.');
+        }
+        
+        let b = references[0];
+
+        if(b instanceof Atom){
+            b = new UnarySentence("", b);
+        }
+
+        if(!(b instanceof UnarySentence)){
+            throw new RuleError('Incorrent reference.');
+        }
+
+        if (!(target instanceof QuantifiedSentence)) {
+            throw new RuleError('The formula being derived must be a quantified sentence.');
+        }
+
+        if(!(target.quant === Quantor.EX)){
+            throw new RuleError('The formula being derived must have an existence quantor.');
+        }
+
+        let a = target.right;
+        if(a instanceof Atom){
+            a = new UnarySentence("", target.right);
+        }
+
+        if(!(a.op === b.op) || !(a.right.predicate === b.right.predicate)){
+            throw new RuleError('Wrong formula derived.');
+        }
+
+        if(!(target.variable === a.right.terms[0].text)){
+            throw new RuleError('Variable not inside derived formula.');
+        }
     }
 }
 
