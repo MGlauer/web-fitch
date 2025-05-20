@@ -1,4 +1,4 @@
-import {parse as peggyParse} from './parser.js'
+import {parse as peggyParse, SyntaxError} from './parser.js'
 import ProofLineBox from "../components/ProofLineBox.jsx";
 import * as React from "react";
 import {buttonGroupClasses} from "@mui/material";
@@ -67,7 +67,7 @@ export class UnarySentence extends Sentence {
         if(this.right instanceof Atom || this.right instanceof PropAtoms || this.right instanceof UnarySentence){
             return LatexUnaryOp[this.op] + this.right.text
         } else {
-            return `${LatexUnaryOp[this.op]}(${this.right.text})`
+            return `${LatexUnaryOp.get(this.op)}(${this.right.text})`
         }
     }
 
@@ -96,7 +96,7 @@ export class QuantifiedSentence extends Sentence {
     };
 
     get latex(){
-        return `${LatexQuantor[this.quant]}${this.variable.latex}(${this.right.latex})`
+        return `${LatexQuantor.get(this.quant)}${this.variable.latex}(${this.right.latex})`
     }
 
     substitute(vari, cons) {
@@ -152,7 +152,7 @@ export class BinarySentence extends Sentence {
         if(this.isAssociative)
             return this.associativeParts.map((x) => x.latex).join(LatexBinaryOp[this.op])
         else
-            return `${this.left.latex}${LatexBinaryOp[this.op]}${this.right.latex}`
+            return `${this.left.latex} ${LatexBinaryOp.get(this.op)} ${this.right.latex}`
     }
 
     substitute(vari, cons) {
@@ -381,14 +381,26 @@ export function generateLatexProof(premises, proofLines, preamble=true){
     if(preamble)
         lines.push("\\begin{fitch}")
     for(const p of premises){
-        lines.push(`\\fj ${p.sentence.latex} \\\\`)
+        try{
+            lines.push(`\\fj ${p.sentence.latex} \\\\`)
+        } catch(SyntaxError) {
+            lines.push(`\\fj ${p.rawString} \\\\`)
+        }
+
     }
     for(const p of proofLines){
         if(p instanceof Array)
             for(const sl of generateLatexProof(p[0], p[1], false))
                 lines.push(`\\fa ${sl}`)
-        else
-            lines.push(`\\fa ${p.sentence.latex} & ${p.justification.rule.label}_${p.justification.lines} \\\\`)
+        else{
+            let s = ""
+            try{
+                s = p.sentence.latex
+            } catch(SyntaxError) {
+                s = p.rawString
+            }
+            lines.push(`\\fa ${s} & ${p.justification.latex} \\\\`)
+        }
     }
     if(preamble)
         lines.push("\\end{fitch}")
@@ -396,13 +408,15 @@ export function generateLatexProof(premises, proofLines, preamble=true){
 }
 
 
+
+
 export const UnaryOp = {
     NEG: "\u00AC",
 };
 
-const LatexUnaryOp = {
-    NEG: "\\neg",
-};
+const LatexUnaryOp = new Map([
+    [UnaryOp.NEG, "\\neg"],
+]);
 
 function readUnaryOp(input) {
     switch (input) {
@@ -418,12 +432,12 @@ export const BinaryOp = {
     BIMPL: "\u2194",
 };
 
-export const LatexBinaryOp = {
-    AND: "\\wedge",
-    OR: "\\vee",
-    IMPL: "\\rightarrow",
-    BIMPL: "\\leftrightarrow",
-};
+export const LatexBinaryOp = new Map([
+    [BinaryOp.AND, "\\wedge"],
+    [BinaryOp.OR, "\\vee"],
+    [BinaryOp.IMPL, "\\rightarrow"],
+    [BinaryOp.BIMPL, "\\leftrightarrow"],
+]);
 
 function readBinaryOp(input) {
     switch (input) {
@@ -445,10 +459,10 @@ export const Quantor = {
     ALL: "\u2200",
 };
 
-const LatexQuantor = {
-    EX: "\\forall",
-    ALL: "\\exists",
-};
+const LatexQuantor = new Map([
+    [Quantor.EX, "\\forall"],
+    [Quantor.ALL, "\\exists"]
+]);
 
 function readQuantor(input) {
     switch (input) {
