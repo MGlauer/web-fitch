@@ -32,12 +32,14 @@ function isAvailable(lines, referencedLineIndex, targetLineIndex, premiseEnd){
             if(availablePerLayer.length-1 < li.level){ // A new, lower subproof
                 availablePerLayer.push([i])
             } else {
-                const finishedSubproof = availablePerLayer.pop()
-                availablePerLayer[availablePerLayer.length-1].push([finishedSubproof[0],finishedSubproof[finishedSubproof.length-1]]) // This subproof is now available
+                while(li.level <= availablePerLayer.length-1){
+                    const finishedSubproof = availablePerLayer.pop()
+                    availablePerLayer[availablePerLayer.length-1].push([finishedSubproof[0],finishedSubproof[finishedSubproof.length-1]])
+                } // This subproof is now available
                 availablePerLayer.push([i])
             }
         } else {
-            if(li.level < availablePerLayer.length-1){
+            while(li.level < availablePerLayer.length-1){
                 const finishedSubproof = availablePerLayer.pop()
                 availablePerLayer[availablePerLayer.length-1].push([finishedSubproof[0],finishedSubproof[finishedSubproof.length-1]])
             }
