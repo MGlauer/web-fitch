@@ -1,4 +1,4 @@
-import {BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence} from './structure.js'
+import {BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence, Atom, QuantifiedSentence, Quantor} from './structure.js'
 
 function getSubproof(proofLines, start, end) {
     let buffer = [];
@@ -152,6 +152,51 @@ export class Assumption extends Rule {
     }
 
     static _check(references, target) {
+    }
+}
+
+export class AllElim extends Rule {
+
+    static label = "\u2200-Elim";
+    static {
+        register(this);
+    }
+
+    static _check(references, target) {
+        if (references.length !== 1) {
+            throw new RuleError('Rule must be applied to one line.');
+        }
+
+        let b = target;
+
+        if(b instanceof Atom){
+            b = new UnarySentence("", b);
+        }
+
+        if(!(b instanceof UnarySentence)){
+            throw new RuleError('Incorrent reference.');
+        }
+
+        if (!(references[0] instanceof QuantifiedSentence)) {
+            throw new RuleError('The formula being referenced must be a quantified sentence.');
+        }
+
+        if(!(references[0].quant === Quantor.ALL)){
+            throw new RuleError('The formula being referenced must have an all quantor.');
+        }
+
+        let a = references[0].right;
+        if(a instanceof Atom){
+            a = new UnarySentence("", references[0].right);
+        }
+
+        if(!(a.op === b.op) || !(a.right.predicate === b.right.predicate)){
+            throw new RuleError('Wrong formula.');
+        }
+
+        if(!(references[0].variable === a.right.terms[0].text)){
+            throw new RuleError('Variable not inside quantified formula.');
+        }
     }
 }
 
