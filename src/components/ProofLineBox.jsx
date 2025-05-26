@@ -16,6 +16,8 @@ import Menu from "@mui/material/Menu";
 import SentenceComponent from "./SentenceComponent.jsx";
 
 function readLinesText(text) {
+    if(text === "")
+        return {text: text, processed: []}
     let vs = text.split(",");
     for (let i = 0; i < vs.length; i++) {
         if (vs[i].includes("-")) {
@@ -30,9 +32,12 @@ function readLinesText(text) {
                 vs[i] = [a-1, b-1]
             }
         }
-        else {
-            vs[i] = Number(vs[i])-1
-        }
+        else
+            if(vs[i] === "")
+                vs[i] = null
+            else
+                vs[i] = Number(vs[i])-1
+
     }
     return {text: text, processed: vs}
 }
