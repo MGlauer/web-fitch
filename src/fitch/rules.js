@@ -85,23 +85,17 @@ function printLines(lines){
 export class Rule {
     static derived = [];
     static label = "";
-    static isIdentityIntro = false;
 
     static check(proof, lines, target, target_line, premiseEnd) {
-
+        const targetSentenceLine = proof[target_line]
         try{
-            if(!lines && !this.isIdentityIntro){
+            if(lines.length === 0 && !(targetSentenceLine.justification.rule === IdentityIntro) && !(targetSentenceLine.justification.rule === Assumption)){
                 throw new RuleError("No referenced lines")
             }
-
-            if(!lines && this.isIdentityIntro){
-                lines = [] // Dummy value so check goes through
-            }
-
-            this._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
+            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
         } catch (error) {
             if(error instanceof RuleError){
-                error.message =  `[ERROR applying ${this.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
+                error.message =  `[ERROR applying ${targetSentenceLine.justification.rule.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
             }
             throw error
         }
@@ -162,9 +156,8 @@ export class Assumption extends Rule {
 }
 
 // Id: Identity of variable
-export class Identity extends Rule {
+export class IdentityIntro extends Rule {
     static label = "\u003D-Intro";
-    static isIdentityIntro = true;
     static {
         register(this);
     }
