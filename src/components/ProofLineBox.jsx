@@ -1,6 +1,6 @@
 import {parse} from "../fitch/structure.js";
 import {Justification, SentenceLine} from "../fitch/proofstructure.js";
-import {Rule} from "../fitch/rules.js";
+import {IdentityIntro, Rule} from "../fitch/rules.js";
 import Grid from "@mui/material/Grid";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
@@ -91,6 +91,8 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
 
     const handleSelectChange = (event) => {
         const newJustification = new Justification(Rule.derived[event.target.value], sentenceLine.justification.lines)
+        if(newJustification.rule === IdentityIntro)
+            newJustification.lines = {text:"", processed:[]}
         updateFun(new SentenceLine(sentenceLine.rawString, newJustification, sentenceLine.level, sentenceLine.isAssumption, sentenceLine.parseError));
     };
 
@@ -116,6 +118,7 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
                 <TextField variant="filled" onChange={handleLinesChange}
                            label="Lines"
                            size="small"
+                           sx = {{display:(sentenceLine.justification.rule === IdentityIntro?"none":"block")}}
                            error={sentenceLine.justification.lines.error}
                            helperText={sentenceLine.justification.lines.error ? sentenceLine.justification.lines.error : ""}
                            value={sentenceLine.justification.lines.text?sentenceLine.justification.lines.text:""}/>
