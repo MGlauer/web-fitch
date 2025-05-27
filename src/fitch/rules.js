@@ -87,14 +87,15 @@ export class Rule {
     static label = "";
 
     static check(proof, lines, target, target_line, premiseEnd) {
+        const targetSentenceLine = proof[target_line]
         try{
-            if(lines.length === 0 && !(target.justification.rule instanceof IdentityIntro) && !(target.justification.rule instanceof Assumption)){
+            if(lines.length === 0 && !(targetSentenceLine.justification.rule === IdentityIntro) && !(targetSentenceLine.justification.rule === Assumption)){
                 throw new RuleError("No referenced lines")
             }
-            target.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
+            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
         } catch (error) {
             if(error instanceof RuleError){
-                error.message =  `[ERROR applying ${target.justification.rule.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
+                error.message =  `[ERROR applying ${targetSentenceLine.justification.rule.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
             }
             throw error
         }
