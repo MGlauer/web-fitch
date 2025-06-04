@@ -155,6 +155,39 @@ export class Assumption extends Rule {
     }
 }
 
+// Id: Identity of constant
+export class IdentityElim extends Rule {
+    static label = "\u003D-Elim";
+    static {
+        register(this);
+    }
+
+    static _check(references, target){
+        if(references.length !== 2){
+            throw new RuleError("Identity elimination must reference two lines.")
+        }
+
+        let att = references[0];
+        let idIntro = references[1];
+
+        if(!(att instanceof Atom) || !(idIntro instanceof Atom && idIntro.predicate === "=")){
+            throw new RuleError("Incorrect references. Predicate symbol should be first, identity intro should be second.")
+        }
+
+        if(att.predicate !== target.predicate){
+            throw new RuleError("Wrong formula derived.");
+        }
+
+        let firstPoss = new Atom(att.predicate, att.terms.map(char => char.equals(idIntro.terms[0]) ? idIntro.terms[1] : char));
+
+        let secondPoss = new Atom(att.predicate, att.terms.map(char => char.equals(idIntro.terms[1]) ? idIntro.terms[0] : char));
+
+        if(!(target.equals(firstPoss) || target.equals(secondPoss))){
+            throw new RuleError("Wrong identity elimination.");
+        }
+    }
+}
+
 // Id: Identity of variable
 export class IdentityIntro extends Rule {
     static label = "\u003D-Intro";
