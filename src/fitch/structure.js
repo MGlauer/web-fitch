@@ -61,7 +61,7 @@ export class UnarySentence extends Sentence {
     };
 
     substitute(vari, cons) {
-        return UnarySentence(this.op, this.right.substitute(vari, cons))
+        return new UnarySentence(this.op, this.right.substitute(vari, cons))
     }
 
     equals(other){
@@ -88,7 +88,7 @@ export class QuantifiedSentence extends Sentence {
         if (this.variable == vari) {
             return this
         } else {
-            return QuantifiedSentence(this.quant, this.variable, this.right.substitute(vari, cons))
+            return new QuantifiedSentence(this.quant, this.variable, this.right.substitute(vari, cons))
         }
     }
 
@@ -187,7 +187,7 @@ export class Atom extends Sentence {
     }
 
     substitute(vari, cons) {
-        return Atom(this.predicate, this.terms.map((x) => x.substitute(vari, cons)));
+        return new Atom(this.predicate, this.terms.map((x) => x.substitute(vari, cons)));
     }
 
     equals(other){
@@ -238,7 +238,7 @@ export class FunctionTerm extends Term {
     constructor(fun, terms) {
         super()
         this.fun = fun;
-        this.terms = terms
+        this.terms = terms;
     }
 
     get text() {
@@ -246,7 +246,7 @@ export class FunctionTerm extends Term {
     }
 
     substitute(vari, cons) {
-        return Atom(this.fun, this.terms.map((x) => x.substitute(vari, cons)));
+        return new FunctionTerm(this.fun, this.terms.map((x) => x.substitute(vari, cons)));
     }
 
     equals(other){
@@ -257,7 +257,7 @@ export class FunctionTerm extends Term {
             return false
 
         if (other.fun !== this.fun)
-            return
+            return false
 
         return this.terms.every((x,i) => x.equals(other.terms[i]))
     }
@@ -274,9 +274,17 @@ export class Constant extends Term {
         return this.name
     }
 
+    substitute(vari, cons){
+        if(this.text == vari.text){
+            return cons;
+        }
+        return this;
+    }
+
     equals(other){
         if(!(other instanceof Constant))
             return false
+
         return this.name === other.name
     }
 }

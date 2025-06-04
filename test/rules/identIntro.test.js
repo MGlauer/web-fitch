@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {invalidRuleTestWithParser, ruleTestWithParser} from "./base.js"
 import {IdentityIntro,} from "../../src/fitch/rules.js";
 
-describe("negation introduction with parsing", () => {
+describe("identity introduction with parsing", () => {
     const testcases = [
         [[], "a=a"],
     ]
