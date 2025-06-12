@@ -42,6 +42,11 @@ export class Sentence {
     substitute(vari, cons) {
         throw "Not implemented"
     }
+
+    equalModuloSubstitution(other, subs) {
+        throw "Not implemented"
+    }
+
 }
 
 export class UnarySentence extends Sentence {
@@ -70,6 +75,12 @@ export class UnarySentence extends Sentence {
         return (other.op === this.op) && (this.right.equals(other.right))
     }
 
+    equalModuloSubstitution(other, subs) {
+        if(!(other instanceof UnarySentence) || (other.op !== this.op))
+            return false
+        else
+            return this.right.equalModuloSubstitution(other.right, subs)
+    }
 }
 
 export class QuantifiedSentence extends Sentence {
@@ -98,6 +109,13 @@ export class QuantifiedSentence extends Sentence {
             other.quant === this.quant &&
             other.variable === this.variable &&
             this.right.equals(other.right))
+    }
+
+    equalModuloSubstitution(other, subs) {
+        if(!(other instanceof QuantifiedSentence) || (other.quant !== this.quant) || !other.variable.equals(this.variable))
+            return false
+        else
+            return this.right.equalModuloSubstitution(other.right, subs)
     }
 }
 
@@ -162,6 +180,14 @@ export class BinarySentence extends Sentence {
             return this.left.equals(other.left) && this.right.equals(other.right)
     }
 
+    equalModuloSubstitution(other, subs) {
+        if(!(other instanceof BinarySentence) || (other.op !== this.op))
+            return false
+        else {
+            return this.left.equalModuloSubstitution(other.left, subs) && this.right.equalModuloSubstitution(other.left, subs)
+        }
+    }
+
 }
 
 export class Falsum extends Sentence {
@@ -173,6 +199,9 @@ export class Falsum extends Sentence {
         return other instanceof Falsum
     }
 
+    equalModuloSubstitution(other, subs) {
+        return other instanceof Falsum
+    }
 }
 
 export class Atom extends Sentence {
@@ -203,6 +232,15 @@ export class Atom extends Sentence {
         return this.terms.every((x,i) => x.equals(other.terms[i]))
     }
 
+    equalModuloSubstitution(other, subs) {
+        if (!(other instanceof Atom) || this.predicate !== other.predicate || this.terms.length !== other.terms.length)
+            return false
+        for(let i=0; i< this.terms.length; i++){
+            if(!this.terms[i].equalModuloSubstitution(other.terms[i], subs))
+                return false
+        }
+        return true
+    }
 }
 
 export class PropAtoms extends Sentence {
@@ -231,6 +269,15 @@ export class Term {
 
     substitute(vari, cons) {
         throw "Not implemented"
+    }
+
+    equalModuloSubstitution(other, subs) {
+
+        for(const [l,r] of subs){
+            if(l.equals(this))
+                return r.equals(other)
+        }
+        return false
     }
 }
 
@@ -262,6 +309,19 @@ export class FunctionTerm extends Term {
         return this.terms.every((x,i) => x.equals(other.terms[i]))
     }
 
+    equalModuloSubstitution(other, subs) {
+        if(super.equalModuloSubstitution(other, subs))
+            return true
+
+        if (!(other instanceof FunctionTerm) || this.fun !== other.fun || this.terms.length !== other.terms.length)
+            return false
+        for(let i=0; i< this.terms.length; i++){
+            if(!this.terms[i].equalModuloSubstitution(other.terms[i], subs))
+                return false
+        }
+        return true
+    }
+
 }
 
 export class Constant extends Term {
@@ -287,6 +347,16 @@ export class Constant extends Term {
 
         return this.name === other.name
     }
+
+    equalModuloSubstitution(other, subs) {
+        if(super.equalModuloSubstitution(other, subs))
+            return true
+
+        if(!(other instanceof Constant))
+            return false
+
+        return this.equals(other)
+    }
 }
 
 export class Variable extends Term {
@@ -307,6 +377,16 @@ export class Variable extends Term {
         if(!(other instanceof Variable))
             return false
         return this.name === other.name
+    }
+
+    equalModuloSubstitution(other, subs) {
+        if(super.equalModuloSubstitution(other, subs))
+            return true
+
+        if(!(other instanceof Variable))
+            return false
+
+        return this.equals(other) || (this in subs && subs[this].equals(other))
     }
 
 }

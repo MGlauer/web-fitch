@@ -169,21 +169,14 @@ export class IdentityElim extends Rule {
         let att = references[0];
         let idIntro = references[1];
 
-        if(!(idIntro instanceof Atom && idIntro.predicate === "=")){
-            throw new RuleError("Incorrect references. Predicate symbol should be first, identity intro should be second.")
+        if(!(idIntro.predicate === "=")){
+            throw new RuleError("Second reference should be identity atom.")
         }
 
-        if(att.predicate !== target.predicate){
+        if(!att.equalModuloSubstitution(target, [[idIntro.terms[0],idIntro.terms[1]],[idIntro.terms[1],idIntro.terms[0]]])){
             throw new RuleError("Wrong formula derived.");
         }
 
-        let firstPoss = att.substitute(idIntro.terms[0], idIntro.terms[1]);
-
-        let secondPoss = att.substitute(idIntro.terms[1], idIntro.terms[0]);
-
-        if(!(target.equals(firstPoss) || target.equals(secondPoss))){
-            throw new RuleError("Wrong formula derived.");
-        }
     }
 }
 
