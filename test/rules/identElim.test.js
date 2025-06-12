@@ -12,6 +12,7 @@ describe("identity elimination with parsing", () => {
         [["P(a, b)","a=b"], "P(b, b)"],
         [["~P(a, b)","a=b"], "~P(a, a)"],
         [["~P(a, b)","a=b"], "~P(b, b)"],
+        [["P(a, a, b)","a=b"], "P(b, a, b)"],
     ]
     ruleTestWithParser(IdentityElim, testcases)
 });
