@@ -21,7 +21,10 @@ function process(input) {
         case("atom"):
             return new PropAtoms(input.const)
         case("const"):
-            return new Constant(input.const) //Todo: Distinquish between constants and variables
+            if(input.const.match("^[x-z][0-9]*$"))
+                return new Variable(input.const)
+            else
+                return new Constant(input.const)
         default:
             throw Error("Unknown input: " + input)
     }
@@ -40,6 +43,10 @@ export class Sentence {
     }
 
     substitute(vari, cons) {
+        throw "Not implemented"
+    }
+
+    unify(other){
         throw "Not implemented"
     }
 }
@@ -61,7 +68,7 @@ export class UnarySentence extends Sentence {
     };
 
     substitute(vari, cons) {
-        return UnarySentence(this.op, this.right.substitute(vari, cons))
+        return new UnarySentence(this.op, this.right.substitute(vari, cons))
     }
 
     equals(other){
@@ -70,6 +77,12 @@ export class UnarySentence extends Sentence {
         return (other.op === this.op) && (this.right.equals(other.right))
     }
 
+    unify(other){
+        if(!(other instanceof UnarySentence) || other.op !== this.op)
+            return null
+        else
+            return this.right.unify(other.right)
+    }
 }
 
 export class QuantifiedSentence extends Sentence {
@@ -88,7 +101,7 @@ export class QuantifiedSentence extends Sentence {
         if (this.variable == vari) {
             return this
         } else {
-            return QuantifiedSentence(this.quant, this.variable, this.right.substitute(vari, cons))
+            return new QuantifiedSentence(this.quant, this.variable, this.right.substitute(vari, cons))
         }
     }
 
@@ -98,6 +111,13 @@ export class QuantifiedSentence extends Sentence {
             other.quant === this.quant &&
             other.variable === this.variable &&
             this.right.equals(other.right))
+    }
+
+    unify(other){
+        if(!(other instanceof QuantifiedSentence) || other.quant !== this.quant || other.variable !== this.variable)
+            return null
+        else
+            return this.right.unify(other.right)
     }
 }
 
@@ -162,6 +182,19 @@ export class BinarySentence extends Sentence {
             return this.left.equals(other.left) && this.right.equals(other.right)
     }
 
+    unify(other){
+        if(!(other instanceof BinarySentence) || other.op !== this.op)
+            return null
+        else{
+            const lUn = this.left.unify(other.left)
+            if(lUn === null)
+                return null
+            const rUn = this.right.unify(other.right)
+            if(rUn === null)
+                return null
+            return [...lUn, ...rUn]
+        }
+    }
 }
 
 export class Falsum extends Sentence {
@@ -173,6 +206,12 @@ export class Falsum extends Sentence {
         return other instanceof Falsum
     }
 
+    unify(other){
+        if(!(other instanceof Falsum))
+            return []
+        else
+            return null
+    }
 }
 
 export class Atom extends Sentence {
@@ -187,7 +226,7 @@ export class Atom extends Sentence {
     }
 
     substitute(vari, cons) {
-        return Atom(this.predicate, this.terms.map((x) => x.substitute(vari, cons)));
+        return new Atom(this.predicate, this.terms.map((x) => x.substitute(vari, cons)));
     }
 
     equals(other){
@@ -201,6 +240,21 @@ export class Atom extends Sentence {
             return false
 
         return this.terms.every((x,i) => x.equals(other.terms[i]))
+    }
+
+    unify(other){
+        if(!(other instanceof Atom) || other.predicate !== this.predicate || other.terms.length !== this.terms.length)
+            return null
+        else{
+            let subs = []
+            for(let i=0; i<this.terms.length; i++){
+                const subs2 = this.terms[i].unify(other.terms[i])
+                if(subs2 === null)
+                    return null
+                subs = [...subs, ...subs2]
+            }
+            return subs
+        }
     }
 
 }
@@ -230,6 +284,10 @@ export class Term {
     }
 
     substitute(vari, cons) {
+        throw "Not implemented"
+    }
+
+    unify(other){
         throw "Not implemented"
     }
 }
@@ -262,6 +320,20 @@ export class FunctionTerm extends Term {
         return this.terms.every((x,i) => x.equals(other.terms[i]))
     }
 
+    unify(other){
+        if(!(other instanceof Atom) || other.function !== this.function || other.terms.length !== this.terms.length)
+            return null
+        else{
+            let subs = []
+            for(let i=0; i<this.terms.length; i++){
+                const subs2 = this.terms[i].unify(other.terms[i])
+                if(subs2 === null)
+                    return null
+                subs = [...subs, ...subs2]
+            }
+            return subs
+        }
+    }
 }
 
 export class Constant extends Term {
@@ -279,6 +351,17 @@ export class Constant extends Term {
             return false
         return this.name === other.name
     }
+
+    substitute(vari, cons) {
+        return this
+    }
+
+    unify(other){
+        if(!this.equals(other))
+            return null
+        else
+            return []
+    }
 }
 
 export class Variable extends Term {
@@ -288,7 +371,7 @@ export class Variable extends Term {
     }
 
     substitute(vari, cons) {
-        if (this == vari) {
+        if (this.equals(vari)) {
             return cons
         } else {
             return this
@@ -299,6 +382,16 @@ export class Variable extends Term {
         if(!(other instanceof Variable))
             return false
         return this.name === other.name
+    }
+
+    unify(other){
+        if(!this.equals(other))
+            if(other instanceof Constant)
+                return [[this.name, other.name]]
+            else
+                return null
+        else
+            return []
     }
 
 }

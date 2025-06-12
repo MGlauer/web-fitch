@@ -23,8 +23,11 @@ start
   = Sen
 
 Sen
-  = q:quant v:functionConVarSym s:PSen { return {type:"quantSen", quant:q, vari:v, sen:s}; }
-  / left:PSen more:((binop PSen)*) { return flatten(left, more); }
+  = left:QSen more:((binop QSen)*) { return flatten(left, more); }
+
+QSen
+ = q:quant v:functionConVarSym s:QSen { return {type:"quantSen", quant:q, vari:v, sen:s}; }
+ / PSen
 
 PSen
  = n:neg s:PSen {return {type: "un", op:n, sen:s};}

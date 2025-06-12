@@ -1,4 +1,4 @@
-import {BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence, Atom, QuantifiedSentence, Quantor} from './structure.js'
+import {BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence, Atom, QuantifiedSentence, Quantor, Constant, Variable} from './structure.js'
 
 function getSubproof(proofLines, start, end) {
     let buffer = [];
@@ -167,35 +167,30 @@ export class AllElim extends Rule {
             throw new RuleError('Rule must be applied to one line.');
         }
 
-        let b = target;
+        const quantSen = references[0];
 
-        if(b instanceof Atom){
-            b = new UnarySentence("", b);
-        }
-
-        if(!(b instanceof UnarySentence)){
-            throw new RuleError('Incorrent reference.');
-        }
-
-        if (!(references[0] instanceof QuantifiedSentence)) {
+        if (!(quantSen instanceof QuantifiedSentence)) {
             throw new RuleError('The formula being referenced must be a quantified sentence.');
         }
 
-        if(!(references[0].quant === Quantor.ALL)){
-            throw new RuleError('The formula being referenced must have an all quantor.');
+        if(!(quantSen.quant === Quantor.ALL)){
+            throw new RuleError('The formula being referenced must have an universal quantifier.');
         }
 
-        let a = references[0].right;
-        if(a instanceof Atom){
-            a = new UnarySentence("", references[0].right);
-        }
+        const s = "The derived formula does not match the referenced formula when replacing all variables: "
 
-        if(!(a.op === b.op) || !(a.right.predicate === b.right.predicate)){
-            throw new RuleError('Wrong formula.');
-        }
+        const rawSubs = quantSen.right.unify(target)
+        if(rawSubs === null)
+            throw new RuleError(s + "The formulas do not follow the same pattern.")
+        const subs = [... new Set(rawSubs)];
 
-        if(!(references[0].variable === a.right.terms[0].text)){
-            throw new RuleError('Variable not inside quantified formula.');
+
+        if(subs.length !== 1)
+            throw new RuleError(s + "Too many substitutions")
+        if (subs[0][0] !== quantSen.variable)
+            throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${quantSen.variable})`)
+        if(!quantSen.right.substitute(new Variable(quantSen.variable), new Constant(subs[0][1])).equals(target)){
+            throw new RuleError(s + `Target cannot be derived from referenced line`)
         }
     }
 }
