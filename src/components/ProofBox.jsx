@@ -7,6 +7,8 @@ import {Justification, SentenceLine} from "../fitch/proofstructure.js";
 import {Sentence} from "../fitch/structure.js";
 import {Rule} from "../fitch/rules.js";
 import Divider from '@mui/material/Divider';
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 
 
 
@@ -29,14 +31,18 @@ export default function ProofBox({
 
     for (const [i, premise] of premises) {
         premiseBlock.push((
+            <Box>
             <ProofLineBox lineNum={i + 1}
                           line={premise}
                           updateFun={updateLine(i)}
                           removeLine={removeLineWrapper(i)}
+                          hasConstChoice={!isTopLevel}
                           //addLineBefore={() => addLineAt(i)}
                           //addLineAfter={() => addLineAt(i+1)}
                           //startSubproofAfter={() => startSubproofLineAt(i+1)}
-            />))
+
+            />
+            </Box>))
     }
     if (isTopLevel) {
         premiseBlock.push(

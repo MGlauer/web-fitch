@@ -1,13 +1,14 @@
 import {parse} from "../fitch/structure.js";
 
 export class SentenceLine {
-    constructor(rawString, justification, level, isAssumption = false, parseError=null, ruleError=null) {
+    constructor(rawString, justification, level, isAssumption = false, parseError=null, ruleError=null, newConstant="") {
         this.rawString = rawString;
         this.justification = justification
         this.level = level
         this.isAssumption = isAssumption
         this.parseError = parseError
         this.ruleError = ruleError
+        this.newConstant = newConstant
     }
 
     get sentence(){

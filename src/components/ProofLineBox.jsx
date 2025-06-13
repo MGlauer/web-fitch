@@ -42,7 +42,7 @@ function readLinesText(text) {
     return {text: text, processed: vs}
 }
 
-export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, addLineBefore, startSubproofAfter, updateFun}) {
+export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, addLineBefore, startSubproofAfter, updateFun, hasConstChoice}) {
     let sentenceLine = line;
 
     const [contextMenu, setContextMenu] = React.useState(null);
@@ -86,7 +86,11 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
             else
                 throw error
         }
-        updateFun(new SentenceLine(text, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption, e));
+        updateFun(new SentenceLine(text, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption, e, sentenceLine.newConstant));
+    }
+
+    const handleConstantChange = (event) => {
+        updateFun(new SentenceLine(sentenceLine.rawString, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption, null, event.target.value));
     }
 
     const handleSelectChange = (event) => {
@@ -139,9 +143,25 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
         }
     }
 
+    let constChoice = (<></>)
+    if(hasConstChoice){
+        constChoice = (
+            <Grid sx={{padding:0}}>
+                <Select
+                    onChange={handleConstantChange}
+                    variant="standard"
+                    value={sentenceLine.newConstant}>
+                    {["", "a", "b", "c", "d", "e"].map((x) =>  (<MenuItem value={{x}}>{x}</MenuItem>))}
+                </Select>
+            </Grid>
+
+        )
+    }
+
     return (
         <Box sx={{width: 1}} onContextMenu={handleContextMenu} style={{ cursor: 'context-menu' }}>
-            <Grid sx={{justifyContent: "flex-end", alignItems: "flex-end",}}container>
+            <Grid sx={{justifyContent: "flex-end", alignItems: "flex-end", padding: 0}} container>
+                {constChoice}
                 <Grid size="grow">
                     <SentenceComponent sentence={sentenceLine.rawString} updateSentence={updateSentence} error={sentenceLine.parseError}/>
                 </Grid>
