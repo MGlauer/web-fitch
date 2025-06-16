@@ -155,6 +155,31 @@ export class Assumption extends Rule {
     }
 }
 
+export class IdentityElim extends Rule {
+    static label = "\u003D-Elim";
+    static {
+        register(this);
+    }
+
+    static _check(references, target){
+        if(references.length !== 2){
+            throw new RuleError("Identity elimination must reference two lines.")
+        }
+
+        let att = references[0];
+        let idIntro = references[1];
+
+        if(!(idIntro.predicate === "=")){
+            throw new RuleError("Second reference should be identity atom.")
+        }
+
+        if(!att.equalModuloSubstitution(target, [[idIntro.terms[0],idIntro.terms[1]],[idIntro.terms[1],idIntro.terms[0]]])){
+            throw new RuleError("Wrong formula derived.");
+        }
+
+    }
+}
+
 // Id: Identity of variable
 export class IdentityIntro extends Rule {
     static label = "\u003D-Intro";
