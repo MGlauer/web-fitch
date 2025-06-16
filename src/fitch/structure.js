@@ -319,7 +319,7 @@ export const BinaryOp = {
     AND: "\u2227",
     OR: "\u2228",
     IMPL: "\u2192",
-    BIMPL: "\u2194",
+    BIMPL: "\u2194"
 };
 
 function readBinaryOp(input) {

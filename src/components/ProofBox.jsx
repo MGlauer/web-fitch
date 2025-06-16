@@ -120,12 +120,12 @@ export default function ProofBox({
                     alignItems: "flex-start"
                 }}>
                     <Button sx={{fontSize: 10}} onClick={() => {
-                        addLine(new SentenceLine("", new Justification(Rule.derived["Reit"], {}), layer, false), lastLineNumber + 1);
+                        addLine(new SentenceLine("", new Justification(Rule.derived["Reit"], {text:"", processed:[]}), layer, false), lastLineNumber + 1);
                     }}
                     > Add Line
                     </Button>
                     <Button sx={{fontSize: 10}} onClick={() => {
-                        addLine(new SentenceLine("", new Justification(Rule.derived["Assumption"], {}), layer + 1, true), lastLineNumber + 1);
+                        addLine(new SentenceLine("", new Justification(Rule.derived["Assumption"], {text:"", processed:[]}), layer + 1, true), lastLineNumber + 1);
                     }}
                     > Start Subproof </Button>
                 </Box>

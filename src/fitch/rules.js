@@ -1,4 +1,4 @@
-import {BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence} from './structure.js'
+import {Atom, BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence} from './structure.js'
 
 function getSubproof(proofLines, start, end) {
     let buffer = [];
@@ -87,15 +87,15 @@ export class Rule {
     static label = "";
 
     static check(proof, lines, target, target_line, premiseEnd) {
-
+        const targetSentenceLine = proof[target_line]
         try{
-            if(!lines){
+            if(lines.length === 0 && !(targetSentenceLine.justification.rule === IdentityIntro) && !(targetSentenceLine.justification.rule === Assumption)){
                 throw new RuleError("No referenced lines")
             }
-            this._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
+            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
         } catch (error) {
             if(error instanceof RuleError){
-                error.message =  `[ERROR applying ${this.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
+                error.message =  `[ERROR applying ${targetSentenceLine.justification.rule.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
             }
             throw error
         }
@@ -152,6 +152,28 @@ export class Assumption extends Rule {
     }
 
     static _check(references, target) {
+    }
+}
+
+// Id: Identity of variable
+export class IdentityIntro extends Rule {
+    static label = "\u003D-Intro";
+    static {
+        register(this);
+    }
+
+    static _check(references, target){
+        if(references.length > 0){
+            throw new RuleError("Identity intro cannot have any lines.")
+        }
+
+        if(!(target instanceof Atom) || (target.predicate !== "=")){
+            throw new RuleError("Formula being derived must be an identity.")
+        }
+
+        if(!(target.terms[0].equals(target.terms[1]))){
+            throw new RuleError("Left hand side does not equal right hand side.")
+        }
     }
 }
 
