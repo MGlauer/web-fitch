@@ -87,15 +87,15 @@ export class Rule {
     static label = "";
 
     static check(proof, lines, target, target_line, premiseEnd) {
-
+        const targetSentenceLine = proof[target_line]
         try{
-            if(!lines){
+            if(lines.length === 0 && !(targetSentenceLine.justification.rule === IdentityIntro) && !(targetSentenceLine.justification.rule === Assumption)){
                 throw new RuleError("No referenced lines")
             }
-            this._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
+            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
         } catch (error) {
             if(error instanceof RuleError){
-                error.message =  `[ERROR applying ${this.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
+                error.message =  `[ERROR applying ${targetSentenceLine.justification.rule.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
             }
             throw error
         }
@@ -156,8 +156,8 @@ export class Assumption extends Rule {
 }
 
 export class ExistenceIntro extends Rule {
-
     static label = "\u2203-Intro";
+
     static {
         register(this);
     }
@@ -166,7 +166,7 @@ export class ExistenceIntro extends Rule {
         if (references.length !== 1) {
             throw new RuleError('Rule must be applied to one line.');
         }
-        
+
         let b = references[0];
 
         if(b instanceof Atom){
@@ -186,6 +186,7 @@ export class ExistenceIntro extends Rule {
         }
 
         let a = target.right;
+
         if(a instanceof Atom){
             a = new UnarySentence("", target.right);
         }
@@ -196,6 +197,53 @@ export class ExistenceIntro extends Rule {
 
         if(!(target.variable === a.right.terms[0].text)){
             throw new RuleError('Variable not inside derived formula.');
+        }
+    }
+}
+
+export class IdentityElim extends Rule {
+    static label = "\u003D-Elim";
+    static {
+        register(this);
+    }
+
+    static _check(references, target){
+        if(references.length !== 2){
+            throw new RuleError("Identity elimination must reference two lines.")
+        }
+
+        let att = references[0];
+        let idIntro = references[1];
+
+        if(!(idIntro.predicate === "=")){
+            throw new RuleError("Second reference should be identity atom.")
+        }
+
+        if(!att.equalModuloSubstitution(target, [[idIntro.terms[0],idIntro.terms[1]],[idIntro.terms[1],idIntro.terms[0]]])){
+            throw new RuleError("Wrong formula derived.");
+        }
+
+    }
+}
+
+// Id: Identity of variable
+export class IdentityIntro extends Rule {
+    static label = "\u003D-Intro";
+    static {
+        register(this);
+    }
+
+    static _check(references, target){
+        if(references.length > 0){
+            throw new RuleError("Identity intro cannot have any lines.")
+        }
+
+        if(!(target instanceof Atom) || (target.predicate !== "=")){
+            throw new RuleError("Formula being derived must be an identity.")
+        }
+
+        if(!(target.terms[0].equals(target.terms[1]))){
+            throw new RuleError("Left hand side does not equal right hand side.")
         }
     }
 }

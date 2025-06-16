@@ -42,6 +42,11 @@ export class Sentence {
     substitute(vari, cons) {
         throw "Not implemented"
     }
+
+    equalModuloSubstitution(other, subs) {
+        throw "Not implemented"
+    }
+
 }
 
 export class UnarySentence extends Sentence {
@@ -61,7 +66,7 @@ export class UnarySentence extends Sentence {
     };
 
     substitute(vari, cons) {
-        return UnarySentence(this.op, this.right.substitute(vari, cons))
+        return new UnarySentence(this.op, this.right.substitute(vari, cons))
     }
 
     equals(other){
@@ -70,6 +75,12 @@ export class UnarySentence extends Sentence {
         return (other.op === this.op) && (this.right.equals(other.right))
     }
 
+    equalModuloSubstitution(other, subs) {
+        if(!(other instanceof UnarySentence) || (other.op !== this.op))
+            return false
+        else
+            return this.right.equalModuloSubstitution(other.right, subs)
+    }
 }
 
 export class QuantifiedSentence extends Sentence {
@@ -88,7 +99,7 @@ export class QuantifiedSentence extends Sentence {
         if (this.variable == vari) {
             return this
         } else {
-            return QuantifiedSentence(this.quant, this.variable, this.right.substitute(vari, cons))
+            return new QuantifiedSentence(this.quant, this.variable, this.right.substitute(vari, cons))
         }
     }
 
@@ -98,6 +109,13 @@ export class QuantifiedSentence extends Sentence {
             other.quant === this.quant &&
             other.variable === this.variable &&
             this.right.equals(other.right))
+    }
+
+    equalModuloSubstitution(other, subs) {
+        if(!(other instanceof QuantifiedSentence) || (other.quant !== this.quant) || !other.variable.equals(this.variable))
+            return false
+        else
+            return this.right.equalModuloSubstitution(other.right, subs)
     }
 }
 
@@ -162,6 +180,14 @@ export class BinarySentence extends Sentence {
             return this.left.equals(other.left) && this.right.equals(other.right)
     }
 
+    equalModuloSubstitution(other, subs) {
+        if(!(other instanceof BinarySentence) || (other.op !== this.op))
+            return false
+        else {
+            return this.left.equalModuloSubstitution(other.left, subs) && this.right.equalModuloSubstitution(other.left, subs)
+        }
+    }
+
 }
 
 export class Falsum extends Sentence {
@@ -173,6 +199,9 @@ export class Falsum extends Sentence {
         return other instanceof Falsum
     }
 
+    equalModuloSubstitution(other, subs) {
+        return other instanceof Falsum
+    }
 }
 
 export class Atom extends Sentence {
@@ -187,7 +216,7 @@ export class Atom extends Sentence {
     }
 
     substitute(vari, cons) {
-        return Atom(this.predicate, this.terms.map((x) => x.substitute(vari, cons)));
+        return new Atom(this.predicate, this.terms.map((x) => x.substitute(vari, cons)));
     }
 
     equals(other){
@@ -203,6 +232,15 @@ export class Atom extends Sentence {
         return this.terms.every((x,i) => x.equals(other.terms[i]))
     }
 
+    equalModuloSubstitution(other, subs) {
+        if (!(other instanceof Atom) || this.predicate !== other.predicate || this.terms.length !== other.terms.length)
+            return false
+        for(let i=0; i< this.terms.length; i++){
+            if(!this.terms[i].equalModuloSubstitution(other.terms[i], subs))
+                return false
+        }
+        return true
+    }
 }
 
 export class PropAtoms extends Sentence {
@@ -232,13 +270,22 @@ export class Term {
     substitute(vari, cons) {
         throw "Not implemented"
     }
+
+    equalModuloSubstitution(other, subs) {
+
+        for(const [l,r] of subs){
+            if(l.equals(this))
+                return r.equals(other)
+        }
+        return false
+    }
 }
 
 export class FunctionTerm extends Term {
     constructor(fun, terms) {
         super()
         this.fun = fun;
-        this.terms = terms
+        this.terms = terms;
     }
 
     get text() {
@@ -246,7 +293,7 @@ export class FunctionTerm extends Term {
     }
 
     substitute(vari, cons) {
-        return Atom(this.fun, this.terms.map((x) => x.substitute(vari, cons)));
+        return new FunctionTerm(this.fun, this.terms.map((x) => x.substitute(vari, cons)));
     }
 
     equals(other){
@@ -257,9 +304,22 @@ export class FunctionTerm extends Term {
             return false
 
         if (other.fun !== this.fun)
-            return
+            return false
 
         return this.terms.every((x,i) => x.equals(other.terms[i]))
+    }
+
+    equalModuloSubstitution(other, subs) {
+        if(super.equalModuloSubstitution(other, subs))
+            return true
+
+        if (!(other instanceof FunctionTerm) || this.fun !== other.fun || this.terms.length !== other.terms.length)
+            return false
+        for(let i=0; i< this.terms.length; i++){
+            if(!this.terms[i].equalModuloSubstitution(other.terms[i], subs))
+                return false
+        }
+        return true
     }
 
 }
@@ -274,10 +334,28 @@ export class Constant extends Term {
         return this.name
     }
 
+    substitute(vari, cons){
+        if(this.text == vari.text){
+            return cons;
+        }
+        return this;
+    }
+
     equals(other){
         if(!(other instanceof Constant))
             return false
+
         return this.name === other.name
+    }
+
+    equalModuloSubstitution(other, subs) {
+        if(super.equalModuloSubstitution(other, subs))
+            return true
+
+        if(!(other instanceof Constant))
+            return false
+
+        return this.equals(other)
     }
 }
 
@@ -301,6 +379,16 @@ export class Variable extends Term {
         return this.name === other.name
     }
 
+    equalModuloSubstitution(other, subs) {
+        if(super.equalModuloSubstitution(other, subs))
+            return true
+
+        if(!(other instanceof Variable))
+            return false
+
+        return this.equals(other) || (this in subs && subs[this].equals(other))
+    }
+
 }
 
 
@@ -319,7 +407,7 @@ export const BinaryOp = {
     AND: "\u2227",
     OR: "\u2228",
     IMPL: "\u2192",
-    BIMPL: "\u2194",
+    BIMPL: "\u2194"
 };
 
 function readBinaryOp(input) {
