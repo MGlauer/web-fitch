@@ -9,19 +9,25 @@ function parseReference(ref){
         return parse(ref)
 }
 
-export function ruleTestWithParser(rule, testcases){
-    for(const [references,target] of testcases){
-        it(`{${references.join(", ")}} |- ${target}`, () => {
-            expect(()=>rule._check(references.map(parseReference), parse(target))).not.toThrowError()
+export function ruleTestWithParser(rule, testcases) {
+    for(let [references,target,introducedConstant=null] of testcases){
+        let name = `{${references.join(", ")}} |- ${target}`
+        if(introducedConstant)
+            name += `intro: ${introducedConstant}`
+        it( name, () => {
+            expect(()=>rule._check(references.map(parseReference), parse(target),introducedConstant)).not.toThrowError()
         });
     }
 }
 
 export function invalidRuleTestWithParser(rule, testcases){
     describe(`invalid ${rule.label} with parsing`, () => {
-        for(const [references,target] of testcases){
-            it(`{${references.join(", ")}} |- ${target}`, () => {
-                expect(()=>rule._check(references.map(parseReference), parse(target))).toThrowError(RuleError)
+        for(let [references,target,introducedConstant=null] of testcases){
+            let name = `{${references.join(", ")}} |- ${target}`
+            if(introducedConstant)
+                name += `intro: ${introducedConstant}`
+            it(name, () => {
+                expect(()=>rule._check(references.map(parseReference), parse(target),introducedConstant)).toThrowError(RuleError)
             });
         }
     });

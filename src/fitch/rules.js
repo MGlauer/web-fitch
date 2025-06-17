@@ -71,7 +71,7 @@ function resolveReference(proofLines, reference, target_line, premiseEnd){
 }
 
 
-function findConstantIntros(proofLines, references, premiseEnd){
+function findConstantIntro(proofLines, references, premiseEnd){
     let intros = []
     for(const reference of references) {
         if (reference instanceof Array) {
@@ -84,7 +84,9 @@ function findConstantIntros(proofLines, references, premiseEnd){
                 intros.push(c)
         }
     }
-    return intros
+    if(new Set(intros).size > 1)
+        throw RuleError("Too many constant introductions")
+    return intros[0]
 }
 
 
@@ -109,7 +111,7 @@ export class Rule {
             if(lines.length === 0 && !(targetSentenceLine.justification.rule === IdentityIntro) && !(targetSentenceLine.justification.rule === Assumption)){
                 throw new RuleError("No referenced lines")
             }
-            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target, findConstantIntros(proof, lines))
+            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target, findConstantIntro(proof, lines))
         } catch (error) {
             if(error instanceof RuleError){
                 error.message =  `[ERROR applying ${targetSentenceLine.justification.rule.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
@@ -232,7 +234,7 @@ export class AllIntro extends Rule {
         register(this);
     }
 
-    static _check(references, target, introducedConstants) {
+    static _check(references, target, introducedConstant) {
         if (references.length !== 1 && references[0] instanceof Array) {
             throw new RuleError('Rule must be applied to exactly one subproof.');
         }
@@ -249,7 +251,7 @@ export class AllIntro extends Rule {
         const rawSubs = target.right.unify(lastLine)
         if(rawSubs === null)
             throw new RuleError(s + "The last line of subproof and target do not follow the same pattern.")
-        const subs = [...(new Set(rawSubs))];
+        const subs = rawSubs.filter(onlyUniqueSubs);
 
         if(subs.length > 1)
             throw new RuleError(s + "Too many substitutions")
@@ -257,8 +259,8 @@ export class AllIntro extends Rule {
             if(subs.length === 1){
                 if (subs[0][0] !== target.variable)
                     throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${target.variable})`)
-                if(!introducedConstants.has(subs[0][1]))
-                    throw new RuleError(`Substitution does not match introduced constant (found: ${subs[0][1]}, expected any of: ${introducedConstants})`)
+                if(introducedConstant !== subs[0][1])
+                    throw new RuleError(`Substitution does not match introduced constant (found: ${subs[0][1]}, expected: ${introducedConstant})`)
                 if (!target.right.substitute(new Variable(target.variable), new Constant(subs[0][1])).equals(lastLine))
                     throw new RuleError(s + `Target cannot be derived from referenced line`)
             }
