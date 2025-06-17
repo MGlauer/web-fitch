@@ -176,14 +176,14 @@ export class ExistenceIntro extends Rule {
         const quantSen = target;
 
         if (!(quantSen instanceof QuantifiedSentence)) {
-            throw new RuleError('The formula being referenced must be a quantified sentence.');
+            throw new RuleError('The formula being derived must be a quantified sentence.');
         }
 
         if(!(quantSen.quant === Quantor.EX)){
             throw new RuleError('The formula being derived must have an existence quantifier.');
         }
 
-        const s = "The derived formula does not match the referenced formula: "
+        const s = "The referenced formula does not match the derived formula: "
 
         const rawSubs = quantSen.right.unify(references[0])
         if(rawSubs === null)
@@ -191,14 +191,14 @@ export class ExistenceIntro extends Rule {
         const subs = rawSubs.filter(onlyUniqueSubs);
 
         if(subs.length > 1)
-            throw new RuleError(s + "Too many substitutions")
+            throw new RuleError(s + "Found too many substitutions when trying to substitute derived formula")
         else{
             if(subs.length === 1){
                 if (subs[0][0] !== quantSen.variable)
-                    throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${quantSen.variable})`)
+                    throw new RuleError(s + `Wrong variable found when trying to substitute derived formula (found: ${subs[0][0]}, expected: ${quantSen.variable})`)
                 const newSen = quantSen.right.substitute(new Variable(quantSen.variable), new Constant(subs[0][1]))
                 if (!newSen.equals(references[0]))
-                    throw new RuleError(s + `Target cannot be derived from referenced line`)
+                    throw new RuleError(s + `Reference cannot be derived from target line`)
             }
         }
     }
