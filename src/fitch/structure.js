@@ -8,6 +8,8 @@ export function parse(input) {
 }
 
 function process(input) {
+    if(input==="")
+        return new Sentence()
     switch (input.type) {
         case("quantSen"):
             return new QuantifiedSentence(readQuantor(input.quant), input.vari, process(input.sen))
@@ -42,23 +44,27 @@ export class Sentence {
     };
 
     equals(other) {
-        throw "Not implemented"
+        return false
     }
 
     substitute(vari, cons) {
-        throw "Not implemented"
+        return this
     }
 
     unify(other){
-        throw "Not implemented"
+        return this
     }
 
     get freeVariables(){
-        throw "Not implemented"
+        return new Set()
+    }
+
+    get constants(){
+        return new Set()
     }
 
     equalModuloSubstitution(other, subs) {
-        throw "Not implemented"
+        return false
     }
 
 }
@@ -103,6 +109,10 @@ export class UnarySentence extends Sentence {
             return false
         else
             return this.right.equalModuloSubstitution(other.right, subs)
+    }
+
+    get constants(){
+        return this.right.constants
     }
 }
 
@@ -151,6 +161,10 @@ export class QuantifiedSentence extends Sentence {
             return false
         else
             return this.right.equalModuloSubstitution(other.right, subs)
+    }
+
+    get constants(){
+        return this.right.constants
     }
 }
 
@@ -240,6 +254,10 @@ export class BinarySentence extends Sentence {
         }
     }
 
+    get constants(){
+        return new Set([...this.left.constants, ...this.right.constants])
+    }
+
 }
 
 export class Falsum extends Sentence {
@@ -324,6 +342,13 @@ export class Atom extends Sentence {
                 return false
         }
         return true
+    }
+
+    get constants(){
+        let s = []
+        for(const t of this.terms)
+            s = [...s, ...t.constants]
+        return new Set(s)
     }
 }
 
@@ -439,6 +464,12 @@ export class FunctionTerm extends Term {
         return true
     }
 
+    get constants(){
+        let s = []
+        for(const t of this.terms)
+            s = [...s, ...t.constants]
+        return new Set(s)
+    }
 }
 
 export class Constant extends Term {
@@ -465,10 +496,6 @@ export class Constant extends Term {
         return this.name === other.name
     }
 
-    substitute(vari, cons) {
-        return this
-    }
-
     unify(other){
         if(!this.equals(other))
             return null
@@ -487,6 +514,10 @@ export class Constant extends Term {
             return false
 
         return this.equals(other)
+    }
+
+    get constants(){
+        return new Set([this.name])
     }
 }
 
@@ -535,6 +566,10 @@ export class Variable extends Term {
             return false
 
         return this.equals(other) || (this in subs && subs[this].equals(other))
+    }
+
+    get constants(){
+        return new Set()
     }
 
 }

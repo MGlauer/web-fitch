@@ -71,6 +71,23 @@ function resolveReference(proofLines, reference, target_line, premiseEnd){
 }
 
 
+function findConstantIntros(proofLines, references, premiseEnd){
+    let intros = []
+    for(const reference of references) {
+        if (reference instanceof Array) {
+            const c = proofLines[reference[0]].newConstant
+            if(c !== null)
+                for(let i = 0; i<reference[0]; i++){
+                    if(isAvailable(proofLines, i, reference[0], premiseEnd) && proofLines[i].constants.has(c))
+                        throw RuleError("Constant introduces in subproof must be new.")
+                }
+                intros.push(c)
+        }
+    }
+    return intros
+}
+
+
 function printLines(lines){
     let parts = []
     for(const l of lines){
@@ -92,7 +109,7 @@ export class Rule {
             if(lines.length === 0 && !(targetSentenceLine.justification.rule === IdentityIntro) && !(targetSentenceLine.justification.rule === Assumption)){
                 throw new RuleError("No referenced lines")
             }
-            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
+            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target, findConstantIntros(proof, lines))
         } catch (error) {
             if(error instanceof RuleError){
                 error.message =  `[ERROR applying ${targetSentenceLine.justification.rule.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
@@ -204,6 +221,47 @@ export class IdentityIntro extends Rule {
 
         if(!(target.terms[0].equals(target.terms[1]))){
             throw new RuleError("Left hand side does not equal right hand side.")
+        }
+    }
+}
+
+export class AllIntro extends Rule {
+
+    static label = "\u2200-Intro";
+    static {
+        register(this);
+    }
+
+    static _check(references, target, introducedConstants) {
+        if (references.length !== 1 && references[0] instanceof Array) {
+            throw new RuleError('Rule must be applied to exactly one subproof.');
+        }
+
+        const subproof = references[0];
+
+        if (!(target instanceof QuantifiedSentence) || !(target.quant === Quantor.ALL)) {
+            throw new RuleError('The formula being derived must be a universally quantified sentence.');
+        }
+
+        const s = "The derived formula does not match the referenced formula when replacing all variables: "
+        const lastLine = subproof[subproof.length - 1];
+
+        const rawSubs = target.right.unify(lastLine)
+        if(rawSubs === null)
+            throw new RuleError(s + "The last line of subproof and target do not follow the same pattern.")
+        const subs = [...(new Set(rawSubs))];
+
+        if(subs.length > 1)
+            throw new RuleError(s + "Too many substitutions")
+        else{
+            if(subs.length === 1){
+                if (subs[0][0] !== target.variable)
+                    throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${target.variable})`)
+                if(!introducedConstants.has(subs[0][1]))
+                    throw new RuleError(`Substitution does not match introduced constant (found: ${subs[0][1]}, expected any of: ${introducedConstants})`)
+                if (!target.right.substitute(new Variable(target.variable), new Constant(subs[0][1])).equals(lastLine))
+                    throw new RuleError(s + `Target cannot be derived from referenced line`)
+            }
         }
     }
 }

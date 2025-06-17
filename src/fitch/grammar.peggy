@@ -20,7 +20,7 @@
 }
 
 start
-  = Sen
+  = Sen / ""
 
 Sen
   = left:QSen more:((binop QSen)*) { return flatten(left, more); }
