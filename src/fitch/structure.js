@@ -108,7 +108,8 @@ export class QuantifiedSentence extends Sentence {
     };
 
     substitute(vari, cons) {
-        if (this.variable == vari) {
+        if (this.variable === vari) {
+            // If the variable to substitute is not free, don't
             return this
         } else {
             return new QuantifiedSentence(this.quant, this.variable, this.right.substitute(vari, cons))
@@ -131,7 +132,7 @@ export class QuantifiedSentence extends Sentence {
     }
 
     get freeVariables(){
-        return [...this.right.freeVariables.values()].filter((x) => x !== this.variable)
+        return new Set([...this.right.freeVariables.values()].filter((x) => x !== this.variable))
     }
 }
 
@@ -373,10 +374,10 @@ export class FunctionTerm extends Term {
     }
 
     get freeVariables(){
-        let s = new Set()
+        let s = []
         for(const t of this.terms)
-            s = s.union(t.freeVariables)
-        return s
+            s = [...s, ...t.freeVariables]
+        return new Set(s)
     }
 }
 

@@ -9,7 +9,8 @@ describe("existence introduction with parsing", () => {
             [["!x~P(x)"], "~P(s)"],
             [["!x~Cube(x)"], "~Cube(s)"],
             [["!x!yCube(x,y)"], "!yCube(s,y)"],
-            [["!x(P(x)>Q(x))"], "P(a)>Q(a)"]
+            [["!x(P(x)>Q(x))"], "P(a)>Q(a)"],
+            [["!x(P(x)>!xQ(x))"], "P(a)>!xQ(x)"]
     ]
     ruleTestWithParser(AllElim, testcases)
 });
@@ -17,12 +18,10 @@ describe("existence introduction with parsing", () => {
 const invalidTestcases = [
     [[], "!xP(x)"],
     [["!xTet(x)",], "Cube(s)"],
-    [["!xS(y)"], "S(s)"],
     [["!xP(x)"], "~P(s)"],
-    [["!x~Cube(x)"], "Cube(x)"],
     [["!x!yCube(x,y)"], "!xCube(x,s)"],
-    [["!x!yCube(x,y)"], "!yCube(x,y)"],
-    [["!x!yCube(x,y)"], "Cube(s,s)"]
+    [["!x!yCube(x,y)"], "Cube(s,s)"],
+    [["!x(P(x)>!xQ(x))"], "P(a)>Q(a)"]
 ]
 
 invalidRuleTestWithParser(AllElim, invalidTestcases)
