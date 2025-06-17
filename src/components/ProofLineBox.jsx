@@ -90,7 +90,7 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
     }
 
     const handleConstantChange = (event) => {
-        updateFun(new SentenceLine(sentenceLine.rawString, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption, null, event.target.value));
+        updateFun(new SentenceLine(sentenceLine.rawString, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption, null, null, event.target.value));
     }
 
     const handleSelectChange = (event) => {
@@ -151,7 +151,7 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
                     onChange={handleConstantChange}
                     variant="standard"
                     value={sentenceLine.newConstant}>
-                    {["", "a", "b", "c", "d", "e"].map((x) =>  (<MenuItem value={{x}}>{x}</MenuItem>))}
+                    {["", "a", "b", "c", "d", "e"].map((x) =>  (<MenuItem value={x}>{x}</MenuItem>))}
                 </Select>
             </Grid>
 
