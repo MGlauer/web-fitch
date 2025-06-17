@@ -227,6 +227,59 @@ export class IdentityIntro extends Rule {
     }
 }
 
+export class ExistsElim extends Rule {
+
+    static label = "\u2203-Elim";
+    static {
+        register(this);
+    }
+
+    static _check(references, target, introducedConstant) {
+        if (references.length !== 2) {
+            throw new RuleError('Rule must be applied to exactly one line and one subproof.');
+        }
+
+        if(references[0] instanceof Array)
+            throw new RuleError('Second reference must be a single line.');
+
+        if(!(references[1] instanceof Array))
+            throw new RuleError('Second reference must be a subproof.');
+
+        const exLine = references[0];
+        const subproof = references[1];
+        const assumption = subproof[0];
+        const lastLine = subproof[subproof.length - 1];
+
+        if (!(exLine instanceof QuantifiedSentence) || !(exLine.quant === Quantor.EX)) {
+            throw new RuleError('The formula being derived must be a existentially quantified sentence.');
+        }
+
+        const s = "The referenced formula does not match the referenced formula when replacing all variables: "
+        const rawSubs = exLine.right.unify(assumption)
+        if(rawSubs === null)
+            throw new RuleError(s + "The last line of subproof and target do not follow the same pattern.")
+        const subs = rawSubs.filter(onlyUniqueSubs);
+
+        if(subs.length > 1)
+            throw new RuleError(s + "Too many substitutions")
+        else{
+            if(subs.length === 1) {
+                if (subs[0][0] !== exLine.variable)
+                    throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${target.variable})`)
+                if (introducedConstant !== subs[0][1])
+                    throw new RuleError(`Substitution does not match introduced constant (found: ${subs[0][1]}, expected: ${introducedConstant})`)
+
+            }
+        }
+        if (!exLine.right.substitute(new Variable(exLine.variable), new Constant(introducedConstant)).equals(assumption))
+            throw new RuleError(`Target cannot be derived from referenced line`)
+        if(lastLine.constants.has(introducedConstant))
+            throw new RuleError(`Constant introduced in subproof must not be present in last line.`)
+        if(!lastLine.equals(target))
+            throw new RuleError(`Last line of subproof must match target`)
+    }
+}
+
 export class AllIntro extends Rule {
 
     static label = "\u2200-Intro";
