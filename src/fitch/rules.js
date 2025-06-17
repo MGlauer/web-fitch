@@ -1,4 +1,4 @@
-import {Atom, BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence, Atom, QuantifiedSentence, Quantor, Constant, Variable} from './structure.js'
+import {Atom, BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence, QuantifiedSentence, Quantor, Constant, Variable} from './structure.js'
 
 function getSubproof(proofLines, start, end) {
     let buffer = [];
