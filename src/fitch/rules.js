@@ -129,7 +129,13 @@ export function getSubProof(lines, i, j) {
 ///////////////////////
 
 
-
+function onlyUniqueSubs(value, index, array) {
+    for(let i=0; i<array.length; i++){
+        if(i!==index && array[i][0] === value[0]&& array[i][1] === value[1])
+            return false
+    }
+    return true
+}
 
 
 function assertSubproof(ref){
@@ -229,7 +235,7 @@ export class AllElim extends Rule {
         const rawSubs = quantSen.right.unify(target)
         if(rawSubs === null)
             throw new RuleError(s + "The formulas do not follow the same pattern.")
-        const subs = (new Set(rawSubs)).entries();
+        const subs = rawSubs.filter(onlyUniqueSubs);
 
         if(subs.length > 1)
             throw new RuleError(s + "Too many substitutions")
@@ -237,13 +243,14 @@ export class AllElim extends Rule {
             if(subs.length === 1){
                 if (subs[0][0] !== quantSen.variable)
                     throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${quantSen.variable})`)
-
-                if (!quantSen.right.substitute(new Variable(quantSen.variable), new Constant(subs[0][1])).equals(target))
+                const newSen = quantSen.right.substitute(new Variable(quantSen.variable), new Constant(subs[0][1]))
+                if (!newSen.equals(target))
                     throw new RuleError(s + `Target cannot be derived from referenced line`)
             }
         }
     }
 }
+
 
 // Reit: Reiteration of line
 export class Reiteration extends Rule {

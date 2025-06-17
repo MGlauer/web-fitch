@@ -115,11 +115,11 @@ export class QuantifiedSentence extends Sentence {
     }
 
     get text() {
-        return `${this.quant.text}${this.variable.text}(${this.right.text})`
+        return `${this.quant}${this.variable}(${this.right.text})`
     };
 
     substitute(vari, cons) {
-        if (this.variable === vari) {
+        if (this.variable === vari.name) {
             // If the variable to substitute is not free, don't
             return this
         } else {
@@ -187,7 +187,7 @@ export class BinarySentence extends Sentence {
     }
 
     substitute(vari, cons) {
-        return BinarySentence(this.left.substitute(vari, cons), this.op, this.right.substitute(vari, cons))
+        return new BinarySentence(this.left.substitute(vari, cons), this.op, this.right.substitute(vari, cons))
     }
 
     contains(other) {
@@ -348,7 +348,7 @@ export class PropAtoms extends Sentence {
 
 export class Term {
     get text() {
-        throw "Not implemented"
+        return this //throw "Not implemented"
     }
 
     equals(other){
@@ -513,13 +513,15 @@ export class Variable extends Term {
     unify(other){
         if(!this.equals(other))
             if(other instanceof Constant) {
-                let o = {}
-                o[this.name] = other.name
-                return [o]
+                return [[this.name, other.name]]
             } else
                 return null
         else
             return []
+    }
+
+    get text(){
+        return this.name
     }
 
     get freeVariables(){
