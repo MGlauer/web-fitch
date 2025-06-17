@@ -1,7 +1,10 @@
 import {parse as peggyParse} from './parser.js'
 
 export function parse(input) {
-    return process(peggyParse(input))
+    let processed = process(peggyParse(input))
+    if(processed.freeVariables.size > 0)
+        throw SyntaxError("Sentences cannot have free variables")
+    return processed
 }
 
 function process(input) {
@@ -49,6 +52,10 @@ export class Sentence {
     unify(other){
         throw "Not implemented"
     }
+
+    get freeVariables(){
+        throw "Not implemented"
+    }
 }
 
 export class UnarySentence extends Sentence {
@@ -64,7 +71,6 @@ export class UnarySentence extends Sentence {
         } else {
             return `${this.op}(${this.right.text})`
         }
-
     };
 
     substitute(vari, cons) {
@@ -82,6 +88,10 @@ export class UnarySentence extends Sentence {
             return null
         else
             return this.right.unify(other.right)
+    }
+
+    get freeVariables(){
+        return this.right.freeVariables
     }
 }
 
@@ -118,6 +128,10 @@ export class QuantifiedSentence extends Sentence {
             return null
         else
             return this.right.unify(other.right)
+    }
+
+    get freeVariables(){
+        return [...this.right.freeVariables.values()].filter((x) => x !== this.variable)
     }
 }
 
@@ -195,6 +209,10 @@ export class BinarySentence extends Sentence {
             return [...lUn, ...rUn]
         }
     }
+
+    get freeVariables(){
+        return new Set([...this.left.freeVariables, ...this.right.freeVariables])
+    }
 }
 
 export class Falsum extends Sentence {
@@ -211,6 +229,10 @@ export class Falsum extends Sentence {
             return []
         else
             return null
+    }
+
+    get freeVariables(){
+        return new Set()
     }
 }
 
@@ -257,6 +279,13 @@ export class Atom extends Sentence {
         }
     }
 
+    get freeVariables(){
+        let s = []
+        for(const t of this.terms)
+            s = [...s, ...t.freeVariables]
+        return new Set(s)
+    }
+
 }
 
 export class PropAtoms extends Sentence {
@@ -271,6 +300,10 @@ export class PropAtoms extends Sentence {
 
     equals(other){
         return this.name === other.name
+    }
+
+    get freeVariables(){
+        return new Set()
     }
 }
 
@@ -288,6 +321,10 @@ export class Term {
     }
 
     unify(other){
+        throw "Not implemented"
+    }
+
+    get freeVariables(){
         throw "Not implemented"
     }
 }
@@ -334,6 +371,13 @@ export class FunctionTerm extends Term {
             return subs
         }
     }
+
+    get freeVariables(){
+        let s = new Set()
+        for(const t of this.terms)
+            s = s.union(t.freeVariables)
+        return s
+    }
 }
 
 export class Constant extends Term {
@@ -362,6 +406,9 @@ export class Constant extends Term {
         else
             return []
     }
+    get freeVariables(){
+        return new Set()
+    }
 }
 
 export class Variable extends Term {
@@ -386,14 +433,19 @@ export class Variable extends Term {
 
     unify(other){
         if(!this.equals(other))
-            if(other instanceof Constant)
-                return [[this.name, other.name]]
-            else
+            if(other instanceof Constant) {
+                let o = {}
+                o[this.name] = other.name
+                return [o]
+            } else
                 return null
         else
             return []
     }
 
+    get freeVariables(){
+        return new Set([this.name])
+    }
 }
 
 

@@ -8,7 +8,8 @@ describe("existence introduction with parsing", () => {
             [["!xCube(x)"], "Cube(s)"],
             [["!x~P(x)"], "~P(s)"],
             [["!x~Cube(x)"], "~Cube(s)"],
-            [["!x!yCube(x,y)"], "!yCube(s,y)"]
+            [["!x!yCube(x,y)"], "!yCube(s,y)"],
+            [["!x(P(x)>Q(x))"], "P(a)>Q(a)"]
     ]
     ruleTestWithParser(AllElim, testcases)
 });

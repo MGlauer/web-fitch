@@ -182,15 +182,18 @@ export class AllElim extends Rule {
         const rawSubs = quantSen.right.unify(target)
         if(rawSubs === null)
             throw new RuleError(s + "The formulas do not follow the same pattern.")
-        const subs = [... new Set(rawSubs)];
+        const subs = (new Set(rawSubs)).entries();
 
-
-        if(subs.length !== 1)
+        if(subs.length > 1)
             throw new RuleError(s + "Too many substitutions")
-        if (subs[0][0] !== quantSen.variable)
-            throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${quantSen.variable})`)
-        if(!quantSen.right.substitute(new Variable(quantSen.variable), new Constant(subs[0][1])).equals(target)){
-            throw new RuleError(s + `Target cannot be derived from referenced line`)
+        else{
+            if(subs.length === 1){
+                if (subs[0][0] !== quantSen.variable)
+                    throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${quantSen.variable})`)
+
+                if (!quantSen.right.substitute(new Variable(quantSen.variable), new Constant(subs[0][1])).equals(target))
+                    throw new RuleError(s + `Target cannot be derived from referenced line`)
+            }
         }
     }
 }
