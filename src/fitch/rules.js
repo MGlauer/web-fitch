@@ -301,6 +301,9 @@ export class AllIntro extends Rule {
         const s = "The derived formula does not match the referenced formula when replacing all variables: "
         const lastLine = subproof[subproof.length - 1];
 
+        if(subproof[0].text !== "")
+            throw new RuleError("Subproof must not make any assumptions.")
+
         const rawSubs = target.right.unify(lastLine)
         if(rawSubs === null)
             throw new RuleError(s + "The last line of subproof and target do not follow the same pattern.")
