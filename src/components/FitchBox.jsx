@@ -8,9 +8,9 @@ import {RuleError} from "../fitch/rules.js"
 export default function FitchBox() {
     const [premisesEnd, setPremisesEnd] = React.useState(0);
     const [lines, setLines] = React.useState([]);
-
-    const premises = lines.entries().toArray().slice(0, premisesEnd);
-    const proofLines = lines.entries().toArray().slice(premisesEnd);
+    const entries = [...lines.entries()]
+    const premises = entries.slice(0, premisesEnd);
+    const proofLines = entries.slice(premisesEnd);
 
     function alterRefs(justification, alter){
         if(justification.lines.processed) {
