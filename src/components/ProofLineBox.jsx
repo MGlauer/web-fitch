@@ -37,7 +37,7 @@ function readLinesText(text) {
     return {text: text, processed: vs}
 }
 
-export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, addLineBefore, startSubproofAfter, updateFun}) {
+export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, addLineBefore, startSubproofAfter, startSubproofBefore, updateFun}) {
     let sentenceLine = line;
 
     const [contextMenu, setContextMenu] = React.useState(null);
@@ -160,6 +160,7 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
                 <MenuItem disabled={removeLine===undefined} onClick={() => {handleClose();removeLine()}}>Delete Line</MenuItem>
                 <MenuItem disabled={addLineBefore===undefined} onClick={() => {handleClose();addLineBefore()}}>Add Line Before</MenuItem>
                 <MenuItem disabled={addLineAfter===undefined} onClick={() => {handleClose();addLineAfter()}}>Add Line After</MenuItem>
+                <MenuItem disabled={startSubproofBefore===undefined} onClick={() => {handleClose();startSubproofBefore()}}>Start Subproof Before</MenuItem>
                 <MenuItem disabled={startSubproofAfter===undefined} onClick={() => {handleClose();startSubproofAfter()}}>Start Subproof After</MenuItem>
             </Menu>
         </Box>)

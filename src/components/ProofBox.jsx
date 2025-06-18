@@ -83,6 +83,7 @@ export default function ProofBox({
                                   removeLine={removeLineWrapper(lineNum)}
                                   addLineBefore={() => addLineAt(lineNum)}
                                   addLineAfter={() => addLineAt(lineNum+1)}
+                                  startSubproofBefore={() => startSubproofLineAt(lineNum)}
                                   startSubproofAfter={() => startSubproofLineAt(lineNum+1)}
                                   updateFun={updateLine(lineNum)}
                     />))
