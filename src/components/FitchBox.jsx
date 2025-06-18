@@ -6,8 +6,9 @@ import {Justification, SentenceLine} from "../fitch/proofstructure.js";
 import {RuleError} from "../fitch/rules.js"
 
 export default function FitchBox({premisesEnd, setPremisesEnd, lines, setLines}) {
-    const premises = lines.entries().toArray().slice(0, premisesEnd);
-    const proofLines = lines.entries().toArray().slice(premisesEnd);
+    const entries = [...lines.entries()]
+    const premises = entries.slice(0, premisesEnd);
+    const proofLines = entries.slice(premisesEnd);
 
     function alterRefs(justification, alter){
         if(justification.lines.processed) {
