@@ -37,7 +37,7 @@ export default function FitchBox() {
 
         let followingLines = []
         for(let i=insertIndex; i<lines.length; i++){
-            followingLines.push(new SentenceLine(lines[i].rawString, alterRefs(lines[i].justification, (j) => j>=insertIndex?j+1:j), lines[i].level, lines[i].isAssumption))
+            followingLines.push(new SentenceLine(lines[i].rawString, alterRefs(lines[i].justification, (j) => j>=insertIndex?j+1:j), lines[i].level, lines[i].isAssumption, null, null, lines[i].newConstant))
         }
         setLines([...lines.slice(0, insertIndex), line, ...followingLines])
     }
@@ -65,7 +65,7 @@ export default function FitchBox() {
             const removedLines = removeEnd - removeIndex + 1
             const followingLines = []
             for(let i=removeEnd+1; i<lines.length; i++){
-                followingLines.push(new SentenceLine(lines[i].rawString, alterRefs(lines[i].justification, (j) => j>=removeEnd?j-removedLines:j), lines[i].level, lines[i].isAssumption))
+                followingLines.push(new SentenceLine(lines[i].rawString, alterRefs(lines[i].justification, (j) => j>=removeEnd?j-removedLines:j), lines[i].level, lines[i].isAssumption, null, null, lines[i].newConstant))
             }
             setLines([...lines.slice(0, removeIndex), ...followingLines])
         }
