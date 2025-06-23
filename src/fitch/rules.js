@@ -180,6 +180,50 @@ export class Assumption extends Rule {
     }
 }
 
+export class ExistenceIntro extends Rule {
+    static label = "\u2203-Intro";
+
+    static {
+        register(this);
+    }
+
+    static _check(references, target) {
+        if (references.length !== 1) {
+            throw new RuleError('Rule must be applied to one line.');
+        }
+
+        const quantSen = target;
+
+        if (!(quantSen instanceof QuantifiedSentence)) {
+            throw new RuleError('The formula being derived must be a quantified sentence.');
+        }
+
+        if(!(quantSen.quant === Quantor.EX)){
+            throw new RuleError('The formula being derived must have an existence quantifier.');
+        }
+
+        const s = "The referenced formula does not match the derived formula: "
+
+        const rawSubs = quantSen.right.unify(references[0])
+        if(rawSubs === null)
+            throw new RuleError(s + "The formulas do not follow the same pattern.")
+        const subs = rawSubs.filter(onlyUniqueSubs);
+
+        if(subs.length > 1)
+            throw new RuleError(s + "Found too many substitutions when trying to substitute derived formula")
+        else{
+            if(subs.length === 1){
+                if (subs[0][0] !== quantSen.variable)
+                    throw new RuleError(s + `Wrong variable found when trying to substitute derived formula (found: ${subs[0][0]}, expected: ${quantSen.variable})`)
+                const newSen = quantSen.right.substitute(new Variable(quantSen.variable), new Constant(subs[0][1]))
+                if (!newSen.equals(references[0]))
+                    throw new RuleError(s + `Reference cannot be derived from target line`)
+            }
+        }
+    }
+
+}
+
 export class IdentityElim extends Rule {
     static label = "\u003D-Elim";
     static {
@@ -366,7 +410,6 @@ export class AllElim extends Rule {
         }
     }
 }
-
 
 // Reit: Reiteration of line
 export class Reiteration extends Rule {
