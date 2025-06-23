@@ -30,7 +30,7 @@ QSen
  / PSen
 
 PSen
- = n:neg s:PSen {return {type: "un", op:n, sen:s};}
+ = n:neg s:QSen {return {type: "un", op:n, sen:s};}
  / "(" left:Sen ")" {return left;}
  / a:Atom
 
