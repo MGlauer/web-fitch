@@ -1,4 +1,19 @@
-import {BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence} from './structure.js'
+import {
+    Atom,
+    BinaryOp,
+    BinarySentence,
+    Falsum,
+    Sentence,
+    UnaryOp,
+    UnarySentence,
+    QuantifiedSentence,
+    Quantor,
+    Constant,
+    Variable,
+    LatexBinaryOp,
+    LatexUnaryOp,
+    LatexQuantor
+} from './structure.js'
 
 function getSubproof(proofLines, start, end) {
     let buffer = [];
@@ -71,6 +86,25 @@ function resolveReference(proofLines, reference, target_line, premiseEnd){
 }
 
 
+function findConstantIntro(proofLines, references, premiseEnd){
+    let intros = []
+    for(const reference of references) {
+        if (reference instanceof Array) {
+            const c = proofLines[reference[0]].newConstant
+            if(c !== null)
+                for(let i = 0; i<reference[0]; i++){
+                    if(isAvailable(proofLines, i, reference[0], premiseEnd) && proofLines[i].constants.has(c))
+                        throw RuleError("Constant introduces in subproof must be new.")
+                }
+                intros.push(c)
+        }
+    }
+    if(new Set(intros).size > 1)
+        throw RuleError("Too many constant introductions")
+    return intros[0]
+}
+
+
 function printLines(lines){
     let parts = []
     for(const l of lines){
@@ -82,20 +116,29 @@ function printLines(lines){
     return parts.join(",")
 }
 
-export class Rule {
+class Rule {
     static derived = [];
-    static label = "";
+    static operator = "";
+    static type = "";
+
+    static get label(){
+        return `${this.operator}-${this.type}`
+    };
+
+    static get latex(){
+        return this.label
+    }
 
     static check(proof, lines, target, target_line, premiseEnd) {
-
+        const targetSentenceLine = proof[target_line]
         try{
-            if(!lines){
+            if(lines.length === 0 && !(targetSentenceLine.justification.rule === IdentityIntro) && !(targetSentenceLine.justification.rule === Assumption)){
                 throw new RuleError("No referenced lines")
             }
-            this._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
+            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target, findConstantIntro(proof, lines))
         } catch (error) {
             if(error instanceof RuleError){
-                error.message =  `[ERROR applying ${this.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
+                error.message =  `[ERROR applying ${targetSentenceLine.justification.rule.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
             }
             throw error
         }
@@ -103,6 +146,30 @@ export class Rule {
 
     static _check(references, target) {
         throw new Error("Not implemented")
+    }
+}
+
+class BinaryRule extends  Rule{
+    static get latex(){
+        return `${LatexBinaryOp.get(this.operator)}-${this.type}`
+    }
+}
+
+class UnaryRule  extends  Rule{
+    static get latex(){
+        return `${LatexUnaryOp.get(this.operator)}-${this.type}`
+    }
+}
+
+class QuantorRule extends  Rule {
+    static get latex(){
+        return `${LatexQuantor.get(this.operator)}-${this.type}`
+    }
+}
+
+class PureRule extends  Rule {
+    static get latex(){
+        return `${this.operator}-${this.type}`
     }
 }
 
@@ -129,7 +196,13 @@ export function getSubProof(lines, i, j) {
 ///////////////////////
 
 
-
+function onlyUniqueSubs(value, index, array) {
+    for(let i=0; i<array.length; i++){
+        if(i!==index && array[i][0] === value[0]&& array[i][1] === value[1])
+            return false
+    }
+    return true
+}
 
 
 function assertSubproof(ref){
@@ -147,20 +220,245 @@ function assertLine(ref){
 
 export class Assumption extends Rule {
     static label = "Assumption";
-    static {
-        register(this);
-    }
+    static type = "Assumption"
+
 
     static _check(references, target) {
+    }
+}
+
+export class ExistenceIntro extends QuantorRule {
+    static operator = Quantor.EX
+    static type = "Intro"
+    
+
+    static _check(references, target) {
+        if (references.length !== 1) {
+            throw new RuleError('Rule must be applied to one line.');
+        }
+
+        const quantSen = target;
+
+        if (!(quantSen instanceof QuantifiedSentence)) {
+            throw new RuleError('The formula being derived must be a quantified sentence.');
+        }
+
+        if(!(quantSen.quant === Quantor.EX)){
+            throw new RuleError('The formula being derived must have an existence quantifier.');
+        }
+
+        const s = "The referenced formula does not match the derived formula: "
+
+        const rawSubs = quantSen.right.unify(references[0])
+        if(rawSubs === null)
+            throw new RuleError(s + "The formulas do not follow the same pattern.")
+        const subs = rawSubs.filter(onlyUniqueSubs);
+
+        if(subs.length > 1)
+            throw new RuleError(s + "Found too many substitutions when trying to substitute derived formula")
+        else{
+            if(subs.length === 1){
+                if (subs[0][0] !== quantSen.variable)
+                    throw new RuleError(s + `Wrong variable found when trying to substitute derived formula (found: ${subs[0][0]}, expected: ${quantSen.variable})`)
+                const newSen = quantSen.right.substitute(new Variable(quantSen.variable), new Constant(subs[0][1]))
+                if (!newSen.equals(references[0]))
+                    throw new RuleError(s + `Reference cannot be derived from target line`)
+            }
+        }
+    }
+
+}
+
+export class IdentityElim extends PureRule {
+    static operator = "\u003D"
+    static type = "Elim"
+    
+
+    static _check(references, target){
+        if(references.length !== 2){
+            throw new RuleError("Identity elimination must reference two lines.")
+        }
+
+        let att = references[0];
+        let idIntro = references[1];
+
+        if(!(idIntro.predicate === "=")){
+            throw new RuleError("Second reference should be identity atom.")
+        }
+
+        if(!att.equalModuloSubstitution(target, [[idIntro.terms[0],idIntro.terms[1]],[idIntro.terms[1],idIntro.terms[0]]])){
+            throw new RuleError("Wrong formula derived.");
+        }
+
+    }
+}
+
+// Id: Identity of variable
+export class IdentityIntro extends PureRule {
+    static operator = "\u003D"
+    static type = "Intro"
+    
+
+    static _check(references, target){
+        if(references.length > 0){
+            throw new RuleError("Identity intro cannot have any lines.")
+        }
+
+        if(!(target instanceof Atom) || (target.predicate !== "=")){
+            throw new RuleError("Formula being derived must be an identity.")
+        }
+
+        if(!(target.terms[0].equals(target.terms[1]))){
+            throw new RuleError("Left hand side does not equal right hand side.")
+        }
+    }
+}
+
+export class ExistsElim extends QuantorRule {
+
+    static operator = Quantor.EX
+    static type = "Elim"
+    
+
+    static _check(references, target, introducedConstant) {
+        if (references.length !== 2) {
+            throw new RuleError('Rule must be applied to exactly one line and one subproof.');
+        }
+
+        if(references[0] instanceof Array)
+            throw new RuleError('Second reference must be a single line.');
+
+        if(!(references[1] instanceof Array))
+            throw new RuleError('Second reference must be a subproof.');
+
+        const exLine = references[0];
+        const subproof = references[1];
+        const assumption = subproof[0];
+        const lastLine = subproof[subproof.length - 1];
+
+        if (!(exLine instanceof QuantifiedSentence) || !(exLine.quant === Quantor.EX)) {
+            throw new RuleError('The formula being derived must be a existentially quantified sentence.');
+        }
+
+        const s = "The referenced formula does not match the referenced formula when replacing all variables: "
+        const rawSubs = exLine.right.unify(assumption)
+        if(rawSubs === null)
+            throw new RuleError(s + "The last line of subproof and target do not follow the same pattern.")
+        const subs = rawSubs.filter(onlyUniqueSubs);
+
+        if(subs.length > 1)
+            throw new RuleError(s + "Too many substitutions")
+        else{
+            if(subs.length === 1) {
+                if (subs[0][0] !== exLine.variable)
+                    throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${target.variable})`)
+                if (introducedConstant !== subs[0][1])
+                    throw new RuleError(`Substitution does not match introduced constant (found: ${subs[0][1]}, expected: ${introducedConstant})`)
+
+            }
+        }
+        if (!exLine.right.substitute(new Variable(exLine.variable), new Constant(introducedConstant)).equals(assumption))
+            throw new RuleError(`Target cannot be derived from referenced line`)
+        if(lastLine.constants.has(introducedConstant))
+            throw new RuleError(`Constant introduced in subproof must not be present in last line.`)
+        if(!lastLine.equals(target))
+            throw new RuleError(`Last line of subproof must match target`)
+    }
+}
+
+export class AllIntro extends QuantorRule {
+
+    static operator = Quantor.ALL
+    static type = "Intro"
+    
+
+    static _check(references, target, introducedConstant) {
+        if (references.length !== 1 && references[0] instanceof Array) {
+            throw new RuleError('Rule must be applied to exactly one subproof.');
+        }
+
+        const subproof = references[0];
+
+        if (!(target instanceof QuantifiedSentence) || !(target.quant === Quantor.ALL)) {
+            throw new RuleError('The formula being derived must be a universally quantified sentence.');
+        }
+
+        const s = "The derived formula does not match the referenced formula when replacing all variables: "
+        const lastLine = subproof[subproof.length - 1];
+
+        if(subproof[0].text !== "")
+            throw new RuleError("Subproof must not make any assumptions.")
+
+        const rawSubs = target.right.unify(lastLine)
+        if(rawSubs === null)
+            throw new RuleError(s + "The last line of subproof and target do not follow the same pattern.")
+        const subs = rawSubs.filter(onlyUniqueSubs);
+
+        if(subs.length > 1)
+            throw new RuleError(s + "Too many substitutions")
+        else{
+            if(subs.length === 1){
+                if (subs[0][0] !== target.variable)
+                    throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${target.variable})`)
+                if(introducedConstant !== subs[0][1])
+                    throw new RuleError(`Substitution does not match introduced constant (found: ${subs[0][1]}, expected: ${introducedConstant})`)
+                if (!target.right.substitute(new Variable(target.variable), new Constant(subs[0][1])).equals(lastLine))
+                    throw new RuleError(s + `Target cannot be derived from referenced line`)
+            }
+        }
+    }
+}
+
+export class AllElim extends QuantorRule {
+
+    static operator = Quantor.ALL
+    static type = "Elim"
+    
+
+    static _check(references, target) {
+        if (references.length !== 1) {
+            throw new RuleError('Rule must be applied to one line.');
+        }
+
+        const quantSen = references[0];
+
+        if (!(quantSen instanceof QuantifiedSentence)) {
+            throw new RuleError('The formula being referenced must be a quantified sentence.');
+        }
+
+        if(!(quantSen.quant === Quantor.ALL)){
+            throw new RuleError('The formula being referenced must have an universal quantifier.');
+        }
+
+        const s = "The derived formula does not match the referenced formula when replacing all variables: "
+
+        const rawSubs = quantSen.right.unify(target)
+        if(rawSubs === null)
+            throw new RuleError(s + "The formulas do not follow the same pattern.")
+        const subs = rawSubs.filter(onlyUniqueSubs);
+
+        if(subs.length > 1)
+            throw new RuleError(s + "Too many substitutions")
+        else{
+            if(subs.length === 1){
+                if (subs[0][0] !== quantSen.variable)
+                    throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${quantSen.variable})`)
+                const newSen = quantSen.right.substitute(new Variable(quantSen.variable), new Constant(subs[0][1]))
+                if (!newSen.equals(target))
+                    throw new RuleError(s + `Target cannot be derived from referenced line`)
+            }
+        }
     }
 }
 
 // Reit: Reiteration of line
 export class Reiteration extends Rule {
 
-    static label = "Reit";
-    static {
-        register(this);
+    static type = "Reit"
+
+
+    static get label(){
+        return "Reit"
     }
 
     static _check(references, target) {
@@ -175,11 +473,10 @@ export class Reiteration extends Rule {
 }
 
 // &I: Conjunction Introduction
-export class ConjunctionIntro extends Rule {
-    static label = "\u2227-Intro";
-    static {
-        register(this);
-    }
+export class ConjunctionIntro extends BinaryRule {
+    static operator = BinaryOp.AND
+    static type = "Intro"
+    
 
     static _check(references, target) {
         if (references.length < 2) {
@@ -215,11 +512,10 @@ export class ConjunctionIntro extends Rule {
 }
 
 // &E: Conjunction Elimination
-export class ConjunctionElim extends Rule {
-    static label = "\u2227-Elim";
-    static {
-        register(this);
-    }
+export class ConjunctionElim extends BinaryRule {
+    static operator = BinaryOp.AND
+    static type = "Elim"
+    
 
     static _check(references, target) {
         if (references.length !== 1) {
@@ -243,11 +539,10 @@ export class ConjunctionElim extends Rule {
 
 
 // >I: Conditional Introduction
-export class ConditionalIntro extends Rule {
-    static label = "\u2192-Intro";
-    static {
-        register(this);
-    }
+export class ConditionalIntro extends BinaryRule {
+    static operator = BinaryOp.IMPL
+    static type = "Intro"
+    
 
     static _check(references, target) {
         if (!(references.length === 1)) {
@@ -274,12 +569,11 @@ export class ConditionalIntro extends Rule {
 }
 
 // >E: Conditional Elimination
-export class ConditionalElim extends Rule {
+export class ConditionalElim extends BinaryRule {
 
-    static label = "\u2192-Elim";
-    static {
-        register(this);
-    }
+    static operator = BinaryOp.IMPL
+    static type = "Elim"
+    
 
     static _check(references, target) {
         if (references.length !== 2) {
@@ -303,12 +597,11 @@ export class ConditionalElim extends Rule {
 }
 
 // vI: Disjunction Introduction
-export class DisjunctionIntro extends Rule {
+export class DisjunctionIntro extends BinaryRule {
 
-    static label = "\u2228-Intro";
-    static {
-        register(this);
-    }
+    static operator = BinaryOp.OR
+    static type = "Intro"
+    
 
     static _check(references, target) {
 
@@ -330,12 +623,11 @@ export class DisjunctionIntro extends Rule {
 }
 
 // vE: Disjunction Elimination
-export class DisjunctionElim extends Rule {
+export class DisjunctionElim extends BinaryRule {
 
-    static label = "\u2228-Elim";
-    static {
-        register(this);
-    }
+    static operator = BinaryOp.OR
+    static type = "Elim"
+    
 
     static _check(references, target) {
 
@@ -381,12 +673,11 @@ export class DisjunctionElim extends Rule {
 }
 
 // ~I: Negation Introduction
-export class NegationIntro extends Rule {
+export class NegationIntro extends UnaryRule {
 
-    static label = String.fromCharCode(172) + "-Intro";
-    static {
-        register(this);
-    }
+    static operator = UnaryOp.NEG
+    static type = "Intro"
+    
 
     static _check(references, target) {
         if (references.length !== 1) {
@@ -411,12 +702,11 @@ export class NegationIntro extends Rule {
 }
 
 // ~E: Negation Elimination (formerly Double Negation Elimination)
-export class NegationElim extends Rule {
+export class NegationElim extends UnaryRule {
 
-    static label = String.fromCharCode(172) + "-Elim";
-    static {
-        register(this);
-    }
+    static operator = UnaryOp.NEG
+    static type = "Elim"
+    
     static _check(references, target) {
         if (references.length !== 1) {
             throw new RuleError("Rule must be applied to one line.");
@@ -436,12 +726,11 @@ export class NegationElim extends Rule {
 }
 
 // #I: Falsum/Absurdity Introduction (formerly Negation Elimination)
-export class FalsumIntro extends Rule {
+export class FalsumIntro extends PureRule {
 
-    static label = "\u22A5-Intro";
-    static {
-        register(this);
-    }
+    static operator = "\u22A5"
+    static type = "Intro"
+    
 
     static _check(references, target) {
         if (references.length !== 2) {
@@ -466,12 +755,11 @@ export class FalsumIntro extends Rule {
 
 
 // EFQ: Ex Falso Quodlibet
-export class FalsumElim extends Rule {
+export class FalsumElim extends PureRule {
 
-    static label = "\u22A5-Elim";
-    static {
-        register(this);
-    }
+    static operator = "\u22A5"
+    static type = "Elim"
+
 
     static _check(references, target) {
         if (references.length !== 1) {
@@ -487,12 +775,11 @@ export class FalsumElim extends Rule {
 }
 
 // <>I: Biconditional Introduction
-export class BiconditionalIntro extends Rule {
+export class BiconditionalIntro extends BinaryRule {
 
-    static label = "\u2194-Intro";
-    static {
-        register(this);
-    }
+    static operator = BinaryOp.BIMPL
+    static type = "Intro"
+
 
     static _check(references, target) {
         if (references.length !== 2) {
@@ -523,12 +810,11 @@ export class BiconditionalIntro extends Rule {
 }
 
 //<>E: Biconditional Elimination
-export class BiconditionalElim extends Rule {
+export class BiconditionalElim extends BinaryRule {
 
-    static label = "\u2194-Elim";
-    static {
-        register(this);
-    }
+    static operator = BinaryOp.BIMPL
+    static type = "Elim"
+    
 
     static _check(references, target) {
         if (references.length !== 2) {
@@ -548,22 +834,7 @@ export class BiconditionalElim extends Rule {
     }
 }
 
-/*
-//!E: Universal Elimination
-export class UniversalElim extends Rule {
-    static {
-        register(this);
-    }
-    static label = "\u2200-Elim";
-
-    static _check(references, target) {
-        if (references.length !== 1) {
-            throw new RuleError("Rule must be applied to a single lines.");
-        }
-
-        const sub = references[0];
-        assertSubproof(sub)
-        const a = sub[0]
-
-    }
-}*/
+export const introRules = new Map([ConjunctionIntro, DisjunctionIntro, NegationIntro, ConditionalIntro, BiconditionalIntro, FalsumIntro, IdentityIntro, ExistenceIntro, AllIntro].map((x)=> [x.label,x]));
+export const elimRules = new Map([ConjunctionElim, DisjunctionElim, NegationElim, ConditionalElim, BiconditionalElim, FalsumElim, IdentityElim, ExistsElim, AllElim].map((x)=>[x.label,x]))
+export const miscRules = new Map([Reiteration].map((x)=>[x.label,x]))
+export const rules = new Map([...introRules, ...elimRules, ...miscRules])

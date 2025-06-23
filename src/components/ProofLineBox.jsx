@@ -1,6 +1,6 @@
 import {parse} from "../fitch/structure.js";
 import {Justification, SentenceLine} from "../fitch/proofstructure.js";
-import {Rule} from "../fitch/rules.js";
+import {rules, introRules, elimRules, miscRules} from "../fitch/rules.js";
 import Grid from "@mui/material/Grid";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
@@ -11,11 +11,13 @@ import Tooltip from "@mui/material/Tooltip";
 import ErrorIcon from "@mui/icons-material/Error";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import CheckIcon from "@mui/icons-material/Check";
-import {IconButton} from "@mui/material";
+import {IconButton, ListSubheader} from "@mui/material";
 import Menu from "@mui/material/Menu";
 import SentenceComponent from "./SentenceComponent.jsx";
 
 function readLinesText(text) {
+    if(text === "")
+        return {text: text, processed: []}
     let vs = text.split(",");
     for (let i = 0; i < vs.length; i++) {
         if (vs[i].includes("-")) {
@@ -30,14 +32,19 @@ function readLinesText(text) {
                 vs[i] = [a-1, b-1]
             }
         }
-        else {
-            vs[i] = Number(vs[i])-1
-        }
+        else
+            if(vs[i] === "")
+                vs[i] = null
+            else
+                vs[i] = Number(vs[i])-1
+
     }
     return {text: text, processed: vs}
 }
 
-export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, addLineBefore, startSubproofAfter, startSubproofBefore, updateFun}) {
+
+export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, addLineBefore, startSubproofAfter, startSubproofBefore, updateFun, hasConstChoice}) {
+  
     let sentenceLine = line;
 
     const [contextMenu, setContextMenu] = React.useState(null);
@@ -81,17 +88,21 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
             else
                 throw error
         }
-        updateFun(new SentenceLine(text, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption, e));
+        updateFun(new SentenceLine(text, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption, e, null, sentenceLine.newConstant));
+    }
+
+    const handleConstantChange = (event) => {
+        updateFun(new SentenceLine(sentenceLine.rawString, sentenceLine.justification, sentenceLine.level, sentenceLine.isAssumption, null, null, event.target.value));
     }
 
     const handleSelectChange = (event) => {
-        const newJustification = new Justification(Rule.derived[event.target.value], sentenceLine.justification.lines)
-        updateFun(new SentenceLine(sentenceLine.rawString, newJustification, sentenceLine.level, sentenceLine.isAssumption, sentenceLine.parseError));
+        const newJustification = new Justification(rules.get(event.target.value), sentenceLine.justification.lines)
+        updateFun(new SentenceLine(sentenceLine.rawString, newJustification, sentenceLine.level, sentenceLine.isAssumption, sentenceLine.parseError, null, sentenceLine.newConstant));
     };
 
     const handleLinesChange = (event) => {
         const newJustification = new Justification(sentenceLine.justification.rule, readLinesText(event.target.value))
-        updateFun(new SentenceLine(sentenceLine.rawString, newJustification, sentenceLine.level, sentenceLine.isAssumption, sentenceLine.parseError));
+        updateFun(new SentenceLine(sentenceLine.rawString, newJustification, sentenceLine.level, sentenceLine.isAssumption, sentenceLine.parseError, null, sentenceLine.newConstant));
     };
 
 
@@ -99,13 +110,17 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
     if (!sentenceLine.isAssumption) {
         justForm = [
             (<Grid size={2}>
-                <Select
-                    onChange={handleSelectChange}
-                    label="Rule"
-                    value={sentenceLine.justification.rule.label}
-                    variant="standard">
-                    {Object.keys(Rule.derived).filter((x) => x!=="Assumption").map((x) => (<MenuItem value={x}>{x}</MenuItem>))}
-                </Select>
+                    <Select
+                        onChange={handleSelectChange}
+                        label="Rule"
+                        value={sentenceLine.justification.rule.label}
+                        variant="standard">
+                        {[...miscRules.keys()].map((x) => (<MenuItem value={x}>{x}</MenuItem>))}
+                        <ListSubheader>Intro</ListSubheader>
+                        {[...introRules.keys()].map((x) => (<MenuItem value={x}>{x}</MenuItem>))}
+                        <ListSubheader>Elim</ListSubheader>
+                        {[...elimRules.keys()].map((x) => (<MenuItem value={x}>{x}</MenuItem>))}
+                    </Select>
             </Grid>),
             (<Grid size={1}>
                 <TextField variant="filled" onChange={handleLinesChange}
@@ -134,9 +149,25 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
         }
     }
 
+    let constChoice = (<></>)
+    if(hasConstChoice){
+        constChoice = (
+            <Grid sx={{padding:0}}>
+                <Select
+                    onChange={handleConstantChange}
+                    variant="standard"
+                    value={sentenceLine.newConstant}>
+                    {["", "a", "b", "c", "d", "e"].map((x) =>  (<MenuItem value={x}>{x}</MenuItem>))}
+                </Select>
+            </Grid>
+
+        )
+    }
+
     return (
         <Box sx={{width: 1}} onContextMenu={handleContextMenu} style={{ cursor: 'context-menu' }}>
-            <Grid sx={{justifyContent: "flex-end", alignItems: "flex-end",}}container>
+            <Grid sx={{justifyContent: "flex-end", alignItems: "flex-end", padding: 0}} container>
+                {constChoice}
                 <Grid size="grow">
                     <SentenceComponent sentence={sentenceLine.rawString} updateSentence={updateSentence} error={sentenceLine.parseError}/>
                 </Grid>

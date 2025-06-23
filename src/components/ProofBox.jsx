@@ -5,8 +5,10 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import {Justification, SentenceLine} from "../fitch/proofstructure.js";
 import {Sentence} from "../fitch/structure.js";
-import {Rule} from "../fitch/rules.js";
+import {Reiteration, Assumption} from "../fitch/rules.js";
 import Divider from '@mui/material/Divider';
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 
 
 
@@ -29,14 +31,18 @@ export default function ProofBox({
 
     for (const [i, premise] of premises) {
         premiseBlock.push((
+            <Box>
             <ProofLineBox lineNum={i + 1}
                           line={premise}
                           updateFun={updateLine(i)}
                           removeLine={removeLineWrapper(i)}
+                          hasConstChoice={!isTopLevel}
                           //addLineBefore={() => addLineAt(i)}
                           //addLineAfter={() => addLineAt(i+1)}
                           //startSubproofAfter={() => startSubproofLineAt(i+1)}
-            />))
+
+            />
+            </Box>))
     }
     if (isTopLevel) {
         premiseBlock.push(
@@ -46,17 +52,17 @@ export default function ProofBox({
                 alignItems: "flex-start"
             }}><Button sx={{fontSize: 10}} onClick={() => {
             setPremisesEnd(premisesEnd + 1)
-            addLine(new SentenceLine("", new Justification(Rule.derived["Reit"], {}), layer, true), premises.length > 0 ? premises[premises.length - 1][0] + 1 : 0);
+            addLine(new SentenceLine("", new Justification(Reiteration, {}), layer, true), premises.length > 0 ? premises[premises.length - 1][0] + 1 : 0);
         }}
             >Add Premise</Button></Box>)
     }
 
     function addLineAt(i){
-        return addLine(new SentenceLine("", new Justification(Rule.derived["Reit"], {}), layer, false), i)
+        return addLine(new SentenceLine("", new Justification(Reiteration, {}), layer, false), i)
     }
 
     function startSubproofLineAt(i){
-        return addLine(new SentenceLine("", new Justification(Rule.derived["Assumption"], {}), layer + 1, true), i)
+        return addLine(new SentenceLine("", new Justification(Assumption, {}), layer + 1, true), i)
     }
 
     // Collate subproofs
@@ -121,12 +127,12 @@ export default function ProofBox({
                     alignItems: "flex-start"
                 }}>
                     <Button sx={{fontSize: 10}} onClick={() => {
-                        addLine(new SentenceLine("", new Justification(Rule.derived["Reit"], {}), layer, false), lastLineNumber + 1);
+                        addLine(new SentenceLine("", new Justification(Reiteration, {text:"", processed:[]}), layer, false), lastLineNumber + 1);
                     }}
                     > Add Line
                     </Button>
                     <Button sx={{fontSize: 10}} onClick={() => {
-                        addLine(new SentenceLine("", new Justification(Rule.derived["Assumption"], {}), layer + 1, true), lastLineNumber + 1);
+                        addLine(new SentenceLine("", new Justification(Assumption, {text:"", processed:[]}), layer + 1, true), lastLineNumber + 1);
                     }}
                     > Start Subproof </Button>
                 </Box>

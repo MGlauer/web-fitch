@@ -1,10 +1,15 @@
-import {parse as peggyParse} from './parser.js'
+import {parse as peggyParse, SyntaxError} from './parser.js'
 
 export function parse(input) {
-    return process(peggyParse(input))
+    let processed = process(peggyParse(input))
+    if(processed.freeVariables.size > 0)
+        throw new SyntaxError("Sentences cannot have free variables")
+    return processed
 }
 
 function process(input) {
+    if(input==="")
+        return new Sentence()
     switch (input.type) {
         case("quantSen"):
             return new QuantifiedSentence(readQuantor(input.quant), input.vari, process(input.sen))
@@ -21,7 +26,10 @@ function process(input) {
         case("atom"):
             return new PropAtoms(input.const)
         case("const"):
-            return new Constant(input.const) //Todo: Distinquish between constants and variables
+            if(input.const.match("^[x-z][0-9]*$"))
+                return new Variable(input.const)
+            else
+                return new Constant(input.const)
         default:
             throw Error("Unknown input: " + input)
     }
@@ -36,11 +44,31 @@ export class Sentence {
     };
 
     equals(other) {
-        throw "Not implemented"
+        return false
     }
 
     substitute(vari, cons) {
-        throw "Not implemented"
+        return this
+    }
+
+    unify(other){
+        return this
+    }
+
+    get freeVariables(){
+        return new Set()
+    }
+
+    get constants(){
+        return new Set()
+    }
+
+    equalModuloSubstitution(other, subs) {
+        return false
+    }
+
+    get latex(){
+        return this.text
     }
 }
 
@@ -57,17 +85,46 @@ export class UnarySentence extends Sentence {
         } else {
             return `${this.op}(${this.right.text})`
         }
-
     };
 
+    get latex(){
+        if(this.right instanceof Atom || this.right instanceof PropAtoms || this.right instanceof UnarySentence){
+            return LatexUnaryOp.get(this.op) + this.right.latex
+        } else {
+            return `${LatexUnaryOp.get(this.op)}(${this.right.latex})`
+        }
+    }
+
     substitute(vari, cons) {
-        return UnarySentence(this.op, this.right.substitute(vari, cons))
+        return new UnarySentence(this.op, this.right.substitute(vari, cons))
     }
 
     equals(other){
         if(!(other instanceof UnarySentence))
             return false
         return (other.op === this.op) && (this.right.equals(other.right))
+    }
+
+    equalModuloSubstitution(other, subs) {
+        if(!(other instanceof UnarySentence) || (other.op !== this.op))
+            return false
+        else
+            return this.right.equalModuloSubstitution(other.right, subs)
+    }
+    unify(other){
+        if(!(other instanceof UnarySentence) || other.op !== this.op)
+            return null
+        else
+            return this.right.unify(other.right)
+    }
+
+    get freeVariables(){
+        return this.right.freeVariables
+    }
+
+
+    get constants(){
+        return this.right.constants
     }
 
 }
@@ -81,14 +138,19 @@ export class QuantifiedSentence extends Sentence {
     }
 
     get text() {
-        return `${this.quant.text}${this.variable.text}(${this.right.text})`
+        return `${this.quant}${this.variable}(${this.right.text})`
     };
 
+    get latex(){
+        return `${LatexQuantor.get(this.quant)}${this.variable}(${this.right.latex})`
+    }
+
     substitute(vari, cons) {
-        if (this.variable == vari) {
+        if (this.variable === vari.name) {
+            // If the variable to substitute is not free, don't
             return this
         } else {
-            return QuantifiedSentence(this.quant, this.variable, this.right.substitute(vari, cons))
+            return new QuantifiedSentence(this.quant, this.variable, this.right.substitute(vari, cons))
         }
     }
 
@@ -98,6 +160,28 @@ export class QuantifiedSentence extends Sentence {
             other.quant === this.quant &&
             other.variable === this.variable &&
             this.right.equals(other.right))
+    }
+
+    equalModuloSubstitution(other, subs) {
+        if(!(other instanceof QuantifiedSentence) || (other.quant !== this.quant) || !other.variable.equals(this.variable))
+            return false
+        else
+            return this.right.equalModuloSubstitution(other.right, subs)
+    }
+
+    unify(other){
+        if(!(other instanceof QuantifiedSentence) || other.quant !== this.quant || other.variable !== this.variable)
+            return null
+        else
+            return this.right.unify(other.right)
+    }
+
+    get freeVariables(){
+        return new Set([...this.right.freeVariables.values()].filter((x) => x !== this.variable))
+    }
+
+    get constants(){
+        return this.right.constants
     }
 }
 
@@ -123,7 +207,7 @@ export class BinarySentence extends Sentence {
     }
 
     get isAssociative() {
-        return this.op == BinaryOp.AND || this.op == BinaryOp.OR
+        return this.op === BinaryOp.AND || this.op === BinaryOp.OR
     }
 
     get text() {
@@ -133,13 +217,20 @@ export class BinarySentence extends Sentence {
             return `${this.left.text}${this.op}${this.right.text}`
     }
 
+    get latex() {
+        if(this.isAssociative)
+            return this.associativeParts.map((x) => x.latex).join( ` ${LatexBinaryOp.get(this.op)} `)
+        else
+            return `${this.left.latex} ${LatexBinaryOp.get(this.op)} ${this.right.latex}`
+    }
+
     substitute(vari, cons) {
-        return BinarySentence(this.left.substitute(vari, cons), this.op, this.right.substitute(vari, cons))
+        return new BinarySentence(this.left.substitute(vari, cons), this.op, this.right.substitute(vari, cons))
     }
 
     contains(other) {
         const array1 = this.associativeParts
-        if (other instanceof BinarySentence && this.op == other.op) {
+        if (other instanceof BinarySentence && this.op === other.op) {
             const array2 = other.associativeParts
             return array2.length < array1.length && (array2.every(item => array1.find(item2 => item.equals(item2))) !== undefined)
         } else {
@@ -162,6 +253,36 @@ export class BinarySentence extends Sentence {
             return this.left.equals(other.left) && this.right.equals(other.right)
     }
 
+    equalModuloSubstitution(other, subs) {
+        if(!(other instanceof BinarySentence) || (other.op !== this.op))
+            return false
+        else {
+            return this.left.equalModuloSubstitution(other.left, subs) && this.right.equalModuloSubstitution(other.left, subs)
+        }
+    }
+
+    unify(other){
+        if(!(other instanceof BinarySentence) || other.op !== this.op)
+            return null
+        else{
+            const lUn = this.left.unify(other.left)
+            if(lUn === null)
+                return null
+            const rUn = this.right.unify(other.right)
+            if(rUn === null)
+                return null
+            return [...lUn, ...rUn]
+        }
+    }
+
+    get freeVariables(){
+        return new Set([...this.left.freeVariables, ...this.right.freeVariables])
+    }
+
+    get constants(){
+        return new Set([...this.left.constants, ...this.right.constants])
+    }
+
 }
 
 export class Falsum extends Sentence {
@@ -169,8 +290,26 @@ export class Falsum extends Sentence {
         return '\u22A5';
     }
 
+    get latex() {
+        return '$\\bot$';
+    }
+
     equals(other) {
         return other instanceof Falsum
+    }
+
+    equalModuloSubstitution(other, subs) {
+        return other instanceof Falsum
+    }
+    unify(other){
+        if(!(other instanceof Falsum))
+            return []
+        else
+            return null
+    }
+
+    get freeVariables(){
+        return new Set()
     }
 
 }
@@ -186,8 +325,12 @@ export class Atom extends Sentence {
         return `${this.predicate}(${this.terms.map((x) => x.text).join(", ")})`;
     }
 
+    get latex() {
+        return `${this.predicate}(${this.terms.map((x) => x.latex).join(", ")})`;
+    }
+
     substitute(vari, cons) {
-        return Atom(this.predicate, this.terms.map((x) => x.substitute(vari, cons)));
+        return new Atom(this.predicate, this.terms.map((x) => x.substitute(vari, cons)));
     }
 
     equals(other){
@@ -203,6 +346,43 @@ export class Atom extends Sentence {
         return this.terms.every((x,i) => x.equals(other.terms[i]))
     }
 
+    equalModuloSubstitution(other, subs) {
+        if (!(other instanceof Atom) || this.predicate !== other.predicate || this.terms.length !== other.terms.length)
+            return false
+        for(let i=0; i< this.terms.length; i++){
+            if(!this.terms[i].equalModuloSubstitution(other.terms[i], subs))
+                return false
+        }
+        return true
+    }
+    unify(other){
+        if(!(other instanceof Atom) || other.predicate !== this.predicate || other.terms.length !== this.terms.length)
+            return null
+        else{
+            let subs = []
+            for(let i=0; i<this.terms.length; i++){
+                const subs2 = this.terms[i].unify(other.terms[i])
+                if(subs2 === null)
+                    return null
+                subs = [...subs, ...subs2]
+            }
+            return subs
+        }
+    }
+
+    get freeVariables(){
+        let s = []
+        for(const t of this.terms)
+            s = [...s, ...t.freeVariables]
+        return new Set(s)
+    }
+
+    get constants(){
+        let s = []
+        for(const t of this.terms)
+            s = [...s, ...t.constants]
+        return new Set(s)
+    }
 }
 
 export class PropAtoms extends Sentence {
@@ -215,14 +395,26 @@ export class PropAtoms extends Sentence {
         return this.name
     }
 
+    get latex() {
+        return this.name
+    }
+
     equals(other){
         return this.name === other.name
+    }
+
+    get freeVariables(){
+        return new Set()
     }
 }
 
 export class Term {
     get text() {
-        throw "Not implemented"
+        return this //throw "Not implemented"
+    }
+
+    get latex(){
+        return this.text
     }
 
     equals(other){
@@ -232,21 +424,43 @@ export class Term {
     substitute(vari, cons) {
         throw "Not implemented"
     }
+
+    equalModuloSubstitution(other, subs) {
+
+        for(const [l,r] of subs){
+            if(l.equals(this))
+                return r.equals(other)
+        }
+        return false
+    }
+
+    unify(other){
+        throw "Not implemented"
+    }
+
+    get freeVariables(){
+        throw "Not implemented"
+    }
+
 }
 
 export class FunctionTerm extends Term {
     constructor(fun, terms) {
         super()
         this.fun = fun;
-        this.terms = terms
+        this.terms = terms;
     }
 
     get text() {
         return `${this.fun}(${this.terms.map((x) => x.text).join(", ")})`;
     }
 
+    get latex() {
+        return `${this.fun}(${this.terms.map((x) => x.latex).join(", ")})`;
+    }
+
     substitute(vari, cons) {
-        return Atom(this.fun, this.terms.map((x) => x.substitute(vari, cons)));
+        return new FunctionTerm(this.fun, this.terms.map((x) => x.substitute(vari, cons)));
     }
 
     equals(other){
@@ -257,11 +471,52 @@ export class FunctionTerm extends Term {
             return false
 
         if (other.fun !== this.fun)
-            return
+            return false
 
         return this.terms.every((x,i) => x.equals(other.terms[i]))
     }
 
+    equalModuloSubstitution(other, subs) {
+        if(super.equalModuloSubstitution(other, subs))
+            return true
+
+        if (!(other instanceof FunctionTerm) || this.fun !== other.fun || this.terms.length !== other.terms.length)
+            return false
+        for(let i=0; i< this.terms.length; i++){
+            if(!this.terms[i].equalModuloSubstitution(other.terms[i], subs))
+                return false
+        }
+        return true
+    }
+
+    unify(other){
+        if(!(other instanceof Atom) || other.function !== this.function || other.terms.length !== this.terms.length)
+            return null
+        else{
+            let subs = []
+            for(let i=0; i<this.terms.length; i++){
+                const subs2 = this.terms[i].unify(other.terms[i])
+                if(subs2 === null)
+                    return null
+                subs = [...subs, ...subs2]
+            }
+            return subs
+        }
+    }
+
+    get freeVariables(){
+        let s = []
+        for(const t of this.terms)
+            s = [...s, ...t.freeVariables]
+        return new Set(s)
+    }
+
+    get constants(){
+        let s = []
+        for(const t of this.terms)
+            s = [...s, ...t.constants]
+        return new Set(s)
+    }
 }
 
 export class Constant extends Term {
@@ -274,10 +529,46 @@ export class Constant extends Term {
         return this.name
     }
 
+    get latex() {
+        return this.name
+    }
+
+    substitute(vari, cons){
+        if(this.text === vari.text){
+            return cons;
+        }
+        return this;
+    }
+
     equals(other){
         if(!(other instanceof Constant))
             return false
+
         return this.name === other.name
+    }
+
+    unify(other){
+        if(!this.equals(other))
+            return null
+        else
+            return []
+    }
+    get freeVariables(){
+        return new Set()
+    }
+
+    equalModuloSubstitution(other, subs) {
+        if(super.equalModuloSubstitution(other, subs))
+            return true
+
+        if(!(other instanceof Constant))
+            return false
+
+        return this.equals(other)
+    }
+
+    get constants(){
+        return new Set([this.name])
     }
 }
 
@@ -288,7 +579,7 @@ export class Variable extends Term {
     }
 
     substitute(vari, cons) {
-        if (this == vari) {
+        if (this.equals(vari)) {
             return cons
         } else {
             return this
@@ -301,12 +592,117 @@ export class Variable extends Term {
         return this.name === other.name
     }
 
+    equalModuloSubstitution(other, subs) {
+        if(super.equalModuloSubstitution(other, subs))
+            return true
+
+        if(!(other instanceof Variable))
+            return false
+
+        return this.equals(other) || (this in subs && subs[this].equals(other))
+    }
+
+    unify(other){
+        if(!this.equals(other))
+            if(other instanceof Constant) {
+                return [[this.name, other.name]]
+            } else
+                return null
+        else
+            return []
+    }
+
+    get text(){
+        return this.name
+    }
+
+
+    get freeVariables(){
+        return new Set([this.name])
+    }
+
+    get constants(){
+        return new Set()
+    }
+
 }
+
+export function collateSubproofs(proofLines){
+    let lineElements = []
+    let buffer = []
+    for (let i = 0; i < proofLines.length; i++) {
+        const line = proofLines[i]
+
+        /* Check whether the existing subproof has ended. This can happen in two cases:
+            1) An assuption on the same level
+            2) Any line on a higher level (i.e., lower level index)
+            */
+        if (buffer.length > 0 && ((line.isAssumption && buffer[0].level === line.level) ||  (buffer[0].level > line.level))){
+            lineElements.push([[buffer[0]],collateSubproofs(buffer.slice(1))])
+            buffer = [];
+        }
+
+        if (!line.isAssumption) {
+            if (buffer.length > 0)
+                buffer.push(proofLines[i])
+            else
+                lineElements.push(line)
+        } else {
+            buffer.push(proofLines[i])
+        }
+    }
+    if(buffer.length > 0){
+        lineElements.push([[buffer[0]],collateSubproofs(buffer.slice(1))])
+    }
+    return lineElements
+}
+
+export function generateLatexProof(premises, proofLines, preamble=true){
+
+    const lines = []
+    if(preamble)
+        lines.push("\\begin{fitch}")
+    for(const p of premises){
+        let c = ""
+        if(p.newConstant){
+            c = `\\fbox{${p.newConstant}}`
+        }
+        try{
+            lines.push(`\\fj ${c}${p.sentence.latex} \\\\`)
+        } catch(SyntaxError) {
+            lines.push(`\\fj ${c}${p.rawString} \\\\`)
+        }
+
+    }
+    for(const p of proofLines){
+        if(p instanceof Array)
+            for(const sl of generateLatexProof(p[0], p[1], false))
+                lines.push(`\\fa ${sl}`)
+        else{
+            let s = ""
+            try{
+                s = p.sentence.latex
+            } catch(SyntaxError) {
+                s = p.rawString
+            }
+            lines.push(`\\fa ${s} & ${p.justification.latex} \\\\`)
+        }
+    }
+    if(preamble)
+        lines.push("\\end{fitch}")
+    return lines
+}
+
+
 
 
 export const UnaryOp = {
     NEG: "\u00AC",
 };
+
+export const LatexUnaryOp = new Map([
+    [UnaryOp.NEG, "$\\neg$"],
+]);
 
 function readUnaryOp(input) {
     switch (input) {
@@ -319,8 +715,15 @@ export const BinaryOp = {
     AND: "\u2227",
     OR: "\u2228",
     IMPL: "\u2192",
-    BIMPL: "\u2194",
+    BIMPL: "\u2194"
 };
+
+export const LatexBinaryOp = new Map([
+    [BinaryOp.AND, "$\\wedge$"],
+    [BinaryOp.OR, "$\\vee$"],
+    [BinaryOp.IMPL, "$\\rightarrow$"],
+    [BinaryOp.BIMPL, "$\\leftrightarrow$"],
+]);
 
 function readBinaryOp(input) {
     switch (input) {
@@ -341,6 +744,11 @@ export const Quantor = {
     EX: "\u2203",
     ALL: "\u2200",
 };
+
+export const LatexQuantor = new Map([
+    [Quantor.ALL, "$\\forall$"],
+    [Quantor.EX, "$\\exists$"]
+]);
 
 function readQuantor(input) {
     switch (input) {

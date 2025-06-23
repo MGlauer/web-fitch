@@ -33,7 +33,7 @@ export default function SentenceComponent({sentence, updateSentence, error}){
 
 
     return (
-        <Stack direction="column" component="form" sx={{ p: '2px 4px'}}>
+        <Stack direction="column" sx={{ p: '2px 4px'}}>
             <Input sx={{width: "100%"}}
                    size="small"
                    placeholder="Sentence"
@@ -52,6 +52,9 @@ export default function SentenceComponent({sentence, updateSentence, error}){
                 {CharButton("\u2194")}
                 {CharButton("\u00AC")}
                 {CharButton("\u22A5")}
+                {CharButton("\u003D")}
+                {CharButton("\u2200")}
+                {CharButton("\u2203")}
             </ButtonGroup>):<></>}
             <FormHelperText error={true}>{error}</FormHelperText>
         </Stack>)

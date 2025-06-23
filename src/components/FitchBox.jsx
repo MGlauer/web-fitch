@@ -5,12 +5,10 @@ import ProofBox from "./ProofBox.jsx"
 import {Justification, SentenceLine} from "../fitch/proofstructure.js";
 import {RuleError} from "../fitch/rules.js"
 
-export default function FitchBox() {
-    const [premisesEnd, setPremisesEnd] = React.useState(0);
-    const [lines, setLines] = React.useState([]);
-
-    const premises = lines.entries().toArray().slice(0, premisesEnd);
-    const proofLines = lines.entries().toArray().slice(premisesEnd);
+export default function FitchBox({premisesEnd, setPremisesEnd, lines, setLines}) {
+    const entries = [...lines.entries()]
+    const premises = entries.slice(0, premisesEnd);
+    const proofLines = entries.slice(premisesEnd);
 
     function alterRefs(justification, alter){
         if(justification.lines.processed) {
@@ -37,7 +35,7 @@ export default function FitchBox() {
 
         let followingLines = []
         for(let i=insertIndex; i<lines.length; i++){
-            followingLines.push(new SentenceLine(lines[i].rawString, alterRefs(lines[i].justification, (j) => j>=insertIndex?j+1:j), lines[i].level, lines[i].isAssumption))
+            followingLines.push(new SentenceLine(lines[i].rawString, alterRefs(lines[i].justification, (j) => j>=insertIndex?j+1:j), lines[i].level, lines[i].isAssumption, null, null, lines[i].newConstant))
         }
         setLines([...lines.slice(0, insertIndex), line, ...followingLines])
     }
@@ -65,7 +63,7 @@ export default function FitchBox() {
             const removedLines = removeEnd - removeIndex + 1
             const followingLines = []
             for(let i=removeEnd+1; i<lines.length; i++){
-                followingLines.push(new SentenceLine(lines[i].rawString, alterRefs(lines[i].justification, (j) => j>=removeEnd?j-removedLines:j), lines[i].level, lines[i].isAssumption))
+                followingLines.push(new SentenceLine(lines[i].rawString, alterRefs(lines[i].justification, (j) => j>=removeEnd?j-removedLines:j), lines[i].level, lines[i].isAssumption, null, null, lines[i].newConstant))
             }
             setLines([...lines.slice(0, removeIndex), ...followingLines])
         }

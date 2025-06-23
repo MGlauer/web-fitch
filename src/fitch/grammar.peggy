@@ -20,14 +20,17 @@
 }
 
 start
-  = Sen
+  = Sen / ""
 
 Sen
-  = q:quant v:functionConVarSym s:PSen { return {type:"quantSen", quant:q, vari:v, sen:s}; }
-  / left:PSen more:((binop PSen)*) { return flatten(left, more); }
+  = left:QSen more:((binop QSen)*) { return flatten(left, more); }
+
+QSen
+ = q:quant v:functionConVarSym s:QSen { return {type:"quantSen", quant:q, vari:v, sen:s}; }
+ / PSen
 
 PSen
- = n:neg s:PSen {return {type: "un", op:n, sen:s};}
+ = n:neg s:QSen {return {type: "un", op:n, sen:s};}
  / "(" left:Sen ")" {return left;}
  / a:Atom
 
@@ -35,10 +38,11 @@ Atom
   = pred:predicateSym par:("(" (Term|1..,","|)  ")")?  {if(!par){return {type:"atom", const:pred};}else{return {type: "pred", pred:pred, terms:par[1]}}; }
   / '#' {return {type:"falsum"}}
   / '\u22A5' {return {type:"falsum"}}
+   / l:Term "=" r:Term {return {type: "pred", pred:"=", terms:[l,r]}}
 
 Term
 	= fun:functionConVarSym par:("(" (Term|1..,","|)  ")")?  {if(!par){return {type:"const", const:fun};}else{return {type: "fun", fun:fun, terms:par[1]};}}
-
+  
 predicateSym
   = $([A-Z][A-z]*)
 
