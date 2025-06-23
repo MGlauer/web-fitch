@@ -1,4 +1,4 @@
-import {BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence, Atom, QuantifiedSentence, Quantor, Constant, Variable} from './structure.js'
+import {Atom, BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence, QuantifiedSentence, Quantor, Constant, Variable} from './structure.js'
 
 function getSubproof(proofLines, start, end) {
     let buffer = [];
@@ -71,6 +71,25 @@ function resolveReference(proofLines, reference, target_line, premiseEnd){
 }
 
 
+function findConstantIntro(proofLines, references, premiseEnd){
+    let intros = []
+    for(const reference of references) {
+        if (reference instanceof Array) {
+            const c = proofLines[reference[0]].newConstant
+            if(c !== null)
+                for(let i = 0; i<reference[0]; i++){
+                    if(isAvailable(proofLines, i, reference[0], premiseEnd) && proofLines[i].constants.has(c))
+                        throw RuleError("Constant introduces in subproof must be new.")
+                }
+                intros.push(c)
+        }
+    }
+    if(new Set(intros).size > 1)
+        throw RuleError("Too many constant introductions")
+    return intros[0]
+}
+
+
 function printLines(lines){
     let parts = []
     for(const l of lines){
@@ -92,7 +111,7 @@ export class Rule {
             if(lines.length === 0 && !(targetSentenceLine.justification.rule === IdentityIntro) && !(targetSentenceLine.justification.rule === Assumption)){
                 throw new RuleError("No referenced lines")
             }
-            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target)
+            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target, findConstantIntro(proof, lines))
         } catch (error) {
             if(error instanceof RuleError){
                 error.message =  `[ERROR applying ${targetSentenceLine.justification.rule.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`
@@ -129,7 +148,13 @@ export function getSubProof(lines, i, j) {
 ///////////////////////
 
 
-
+function onlyUniqueSubs(value, index, array) {
+    for(let i=0; i<array.length; i++){
+        if(i!==index && array[i][0] === value[0]&& array[i][1] === value[1])
+            return false
+    }
+    return true
+}
 
 
 function assertSubproof(ref){
@@ -202,6 +227,103 @@ export class IdentityIntro extends Rule {
     }
 }
 
+export class ExistsElim extends Rule {
+
+    static label = "\u2203-Elim";
+    static {
+        register(this);
+    }
+
+    static _check(references, target, introducedConstant) {
+        if (references.length !== 2) {
+            throw new RuleError('Rule must be applied to exactly one line and one subproof.');
+        }
+
+        if(references[0] instanceof Array)
+            throw new RuleError('Second reference must be a single line.');
+
+        if(!(references[1] instanceof Array))
+            throw new RuleError('Second reference must be a subproof.');
+
+        const exLine = references[0];
+        const subproof = references[1];
+        const assumption = subproof[0];
+        const lastLine = subproof[subproof.length - 1];
+
+        if (!(exLine instanceof QuantifiedSentence) || !(exLine.quant === Quantor.EX)) {
+            throw new RuleError('The formula being derived must be a existentially quantified sentence.');
+        }
+
+        const s = "The referenced formula does not match the referenced formula when replacing all variables: "
+        const rawSubs = exLine.right.unify(assumption)
+        if(rawSubs === null)
+            throw new RuleError(s + "The last line of subproof and target do not follow the same pattern.")
+        const subs = rawSubs.filter(onlyUniqueSubs);
+
+        if(subs.length > 1)
+            throw new RuleError(s + "Too many substitutions")
+        else{
+            if(subs.length === 1) {
+                if (subs[0][0] !== exLine.variable)
+                    throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${target.variable})`)
+                if (introducedConstant !== subs[0][1])
+                    throw new RuleError(`Substitution does not match introduced constant (found: ${subs[0][1]}, expected: ${introducedConstant})`)
+
+            }
+        }
+        if (!exLine.right.substitute(new Variable(exLine.variable), new Constant(introducedConstant)).equals(assumption))
+            throw new RuleError(`Target cannot be derived from referenced line`)
+        if(lastLine.constants.has(introducedConstant))
+            throw new RuleError(`Constant introduced in subproof must not be present in last line.`)
+        if(!lastLine.equals(target))
+            throw new RuleError(`Last line of subproof must match target`)
+    }
+}
+
+export class AllIntro extends Rule {
+
+    static label = "\u2200-Intro";
+    static {
+        register(this);
+    }
+
+    static _check(references, target, introducedConstant) {
+        if (references.length !== 1 && references[0] instanceof Array) {
+            throw new RuleError('Rule must be applied to exactly one subproof.');
+        }
+
+        const subproof = references[0];
+
+        if (!(target instanceof QuantifiedSentence) || !(target.quant === Quantor.ALL)) {
+            throw new RuleError('The formula being derived must be a universally quantified sentence.');
+        }
+
+        const s = "The derived formula does not match the referenced formula when replacing all variables: "
+        const lastLine = subproof[subproof.length - 1];
+
+        if(subproof[0].text !== "")
+            throw new RuleError("Subproof must not make any assumptions.")
+
+        const rawSubs = target.right.unify(lastLine)
+        if(rawSubs === null)
+            throw new RuleError(s + "The last line of subproof and target do not follow the same pattern.")
+        const subs = rawSubs.filter(onlyUniqueSubs);
+
+        if(subs.length > 1)
+            throw new RuleError(s + "Too many substitutions")
+        else{
+            if(subs.length === 1){
+                if (subs[0][0] !== target.variable)
+                    throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${target.variable})`)
+                if(introducedConstant !== subs[0][1])
+                    throw new RuleError(`Substitution does not match introduced constant (found: ${subs[0][1]}, expected: ${introducedConstant})`)
+                if (!target.right.substitute(new Variable(target.variable), new Constant(subs[0][1])).equals(lastLine))
+                    throw new RuleError(s + `Target cannot be derived from referenced line`)
+            }
+        }
+    }
+}
+
 export class AllElim extends Rule {
 
     static label = "\u2200-Elim";
@@ -229,7 +351,7 @@ export class AllElim extends Rule {
         const rawSubs = quantSen.right.unify(target)
         if(rawSubs === null)
             throw new RuleError(s + "The formulas do not follow the same pattern.")
-        const subs = (new Set(rawSubs)).entries();
+        const subs = rawSubs.filter(onlyUniqueSubs);
 
         if(subs.length > 1)
             throw new RuleError(s + "Too many substitutions")
@@ -237,13 +359,14 @@ export class AllElim extends Rule {
             if(subs.length === 1){
                 if (subs[0][0] !== quantSen.variable)
                     throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${quantSen.variable})`)
-
-                if (!quantSen.right.substitute(new Variable(quantSen.variable), new Constant(subs[0][1])).equals(target))
+                const newSen = quantSen.right.substitute(new Variable(quantSen.variable), new Constant(subs[0][1]))
+                if (!newSen.equals(target))
                     throw new RuleError(s + `Target cannot be derived from referenced line`)
             }
         }
     }
 }
+
 
 // Reit: Reiteration of line
 export class Reiteration extends Rule {

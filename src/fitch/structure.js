@@ -8,6 +8,8 @@ export function parse(input) {
 }
 
 function process(input) {
+    if(input==="")
+        return new Sentence()
     switch (input.type) {
         case("quantSen"):
             return new QuantifiedSentence(readQuantor(input.quant), input.vari, process(input.sen))
@@ -42,11 +44,11 @@ export class Sentence {
     };
 
     equals(other) {
-        throw "Not implemented"
+        return false
     }
 
     substitute(vari, cons) {
-        throw "Not implemented"
+        return this
     }
 
     equalModuloSubstitution(other, subs) {
@@ -54,12 +56,21 @@ export class Sentence {
     }
 
     unify(other){
-        throw "Not implemented"
+        return this
     }
 
     get freeVariables(){
-        throw "Not implemented"
+        return new Set()
     }
+
+    get constants(){
+        return new Set()
+    }
+
+    equalModuloSubstitution(other, subs) {
+        return false
+    }
+
 }
 
 export class UnarySentence extends Sentence {
@@ -103,6 +114,16 @@ export class UnarySentence extends Sentence {
     get freeVariables(){
         return this.right.freeVariables
     }
+    equalModuloSubstitution(other, subs) {
+        if(!(other instanceof UnarySentence) || (other.op !== this.op))
+            return false
+        else
+            return this.right.equalModuloSubstitution(other.right, subs)
+    }
+
+    get constants(){
+        return this.right.constants
+    }
 }
 
 export class QuantifiedSentence extends Sentence {
@@ -114,11 +135,11 @@ export class QuantifiedSentence extends Sentence {
     }
 
     get text() {
-        return `${this.quant.text}${this.variable.text}(${this.right.text})`
+        return `${this.quant}${this.variable}(${this.right.text})`
     };
 
     substitute(vari, cons) {
-        if (this.variable === vari) {
+        if (this.variable === vari.name) {
             // If the variable to substitute is not free, don't
             return this
         } else {
@@ -150,6 +171,17 @@ export class QuantifiedSentence extends Sentence {
 
     get freeVariables(){
         return new Set([...this.right.freeVariables.values()].filter((x) => x !== this.variable))
+    }
+
+    equalModuloSubstitution(other, subs) {
+        if(!(other instanceof QuantifiedSentence) || (other.quant !== this.quant) || !other.variable.equals(this.variable))
+            return false
+        else
+            return this.right.equalModuloSubstitution(other.right, subs)
+    }
+
+    get constants(){
+        return this.right.constants
     }
 }
 
@@ -186,7 +218,7 @@ export class BinarySentence extends Sentence {
     }
 
     substitute(vari, cons) {
-        return BinarySentence(this.left.substitute(vari, cons), this.op, this.right.substitute(vari, cons))
+        return new BinarySentence(this.left.substitute(vari, cons), this.op, this.right.substitute(vari, cons))
     }
 
     contains(other) {
@@ -239,6 +271,18 @@ export class BinarySentence extends Sentence {
     get freeVariables(){
         return new Set([...this.left.freeVariables, ...this.right.freeVariables])
     }
+    equalModuloSubstitution(other, subs) {
+        if(!(other instanceof BinarySentence) || (other.op !== this.op))
+            return false
+        else {
+            return this.left.equalModuloSubstitution(other.left, subs) && this.right.equalModuloSubstitution(other.left, subs)
+        }
+    }
+
+    get constants(){
+        return new Set([...this.left.constants, ...this.right.constants])
+    }
+
 }
 
 export class Falsum extends Sentence {
@@ -262,6 +306,9 @@ export class Falsum extends Sentence {
 
     get freeVariables(){
         return new Set()
+    }
+    equalModuloSubstitution(other, subs) {
+        return other instanceof Falsum
     }
 }
 
@@ -324,6 +371,22 @@ export class Atom extends Sentence {
         return new Set(s)
     }
 
+    equalModuloSubstitution(other, subs) {
+        if (!(other instanceof Atom) || this.predicate !== other.predicate || this.terms.length !== other.terms.length)
+            return false
+        for(let i=0; i< this.terms.length; i++){
+            if(!this.terms[i].equalModuloSubstitution(other.terms[i], subs))
+                return false
+        }
+        return true
+    }
+
+    get constants(){
+        let s = []
+        for(const t of this.terms)
+            s = [...s, ...t.constants]
+        return new Set(s)
+    }
 }
 
 export class PropAtoms extends Sentence {
@@ -347,7 +410,7 @@ export class PropAtoms extends Sentence {
 
 export class Term {
     get text() {
-        throw "Not implemented"
+        return this //throw "Not implemented"
     }
 
     equals(other){
@@ -373,6 +436,15 @@ export class Term {
 
     get freeVariables(){
         throw "Not implemented"
+    }
+
+    equalModuloSubstitution(other, subs) {
+
+        for(const [l,r] of subs){
+            if(l.equals(this))
+                return r.equals(other)
+        }
+        return false
     }
 }
 
@@ -438,6 +510,25 @@ export class FunctionTerm extends Term {
             s = [...s, ...t.freeVariables]
         return new Set(s)
     }
+    equalModuloSubstitution(other, subs) {
+        if(super.equalModuloSubstitution(other, subs))
+            return true
+
+        if (!(other instanceof FunctionTerm) || this.fun !== other.fun || this.terms.length !== other.terms.length)
+            return false
+        for(let i=0; i< this.terms.length; i++){
+            if(!this.terms[i].equalModuloSubstitution(other.terms[i], subs))
+                return false
+        }
+        return true
+    }
+
+    get constants(){
+        let s = []
+        for(const t of this.terms)
+            s = [...s, ...t.constants]
+        return new Set(s)
+    }
 }
 
 export class Constant extends Term {
@@ -464,6 +555,16 @@ export class Constant extends Term {
         return this.name === other.name
     }
 
+    unify(other){
+        if(!this.equals(other))
+            return null
+        else
+            return []
+    }
+    get freeVariables(){
+        return new Set()
+    }
+
     equalModuloSubstitution(other, subs) {
         if(super.equalModuloSubstitution(other, subs))
             return true
@@ -474,18 +575,8 @@ export class Constant extends Term {
         return this.equals(other)
     }
 
-    substitute(vari, cons) {
-        return this
-    }
-
-    unify(other){
-        if(!this.equals(other))
-            return null
-        else
-            return []
-    }
-    get freeVariables(){
-        return new Set()
+    get constants(){
+        return new Set([this.name])
     }
 }
 
@@ -522,18 +613,34 @@ export class Variable extends Term {
     unify(other){
         if(!this.equals(other))
             if(other instanceof Constant) {
-                let o = {}
-                o[this.name] = other.name
-                return [o]
+                return [[this.name, other.name]]
             } else
                 return null
         else
             return []
     }
 
+    get text(){
+        return this.name
+    }
+
     get freeVariables(){
         return new Set([this.name])
     }
+    equalModuloSubstitution(other, subs) {
+        if(super.equalModuloSubstitution(other, subs))
+            return true
+
+        if(!(other instanceof Variable))
+            return false
+
+        return this.equals(other) || (this in subs && subs[this].equals(other))
+    }
+
+    get constants(){
+        return new Set()
+    }
+
 }
 
 

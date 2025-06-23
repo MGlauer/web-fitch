@@ -17,6 +17,7 @@ describe("existence introduction with parsing", () => {
 
 const invalidTestcases = [
     [[], "!xP(x)"],
+    [["!xP(x,x)"], "P(a,b)"],
     [["!xTet(x)",], "Cube(s)"],
     [["!xP(x)"], "~P(s)"],
     [["!x!yCube(x,y)"], "!xCube(x,s)"],
