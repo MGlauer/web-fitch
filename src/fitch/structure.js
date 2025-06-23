@@ -1,12 +1,9 @@
 import {parse as peggyParse, SyntaxError} from './parser.js'
-import ProofLineBox from "../components/ProofLineBox.jsx";
-import * as React from "react";
-import {buttonGroupClasses} from "@mui/material";
 
 export function parse(input) {
     let processed = process(peggyParse(input))
     if(processed.freeVariables.size > 0)
-        throw SyntaxError("Sentences cannot have free variables")
+        throw new SyntaxError("Sentences cannot have free variables")
     return processed
 }
 
@@ -92,9 +89,9 @@ export class UnarySentence extends Sentence {
 
     get latex(){
         if(this.right instanceof Atom || this.right instanceof PropAtoms || this.right instanceof UnarySentence){
-            return LatexUnaryOp[this.op] + this.right.text
+            return LatexUnaryOp.get(this.op) + this.right.latex
         } else {
-            return `${LatexUnaryOp.get(this.op)}(${this.right.text})`
+            return `${LatexUnaryOp.get(this.op)}(${this.right.latex})`
         }
     }
 
@@ -145,7 +142,7 @@ export class QuantifiedSentence extends Sentence {
     };
 
     get latex(){
-        return `${LatexQuantor.get(this.quant)}~${this.variable}(${this.right.latex})`
+        return `${LatexQuantor.get(this.quant)}${this.variable}(${this.right.latex})`
     }
 
     substitute(vari, cons) {
@@ -294,7 +291,7 @@ export class Falsum extends Sentence {
     }
 
     get latex() {
-        return '\\bot';
+        return '$\\bot$';
     }
 
     equals(other) {
@@ -700,7 +697,7 @@ export const UnaryOp = {
 };
 
 export const LatexUnaryOp = new Map([
-    [UnaryOp.NEG, "\\neg"],
+    [UnaryOp.NEG, "$\\neg$"],
 ]);
 
 function readUnaryOp(input) {
@@ -718,10 +715,10 @@ export const BinaryOp = {
 };
 
 export const LatexBinaryOp = new Map([
-    [BinaryOp.AND, "\\wedge"],
-    [BinaryOp.OR, "\\vee"],
-    [BinaryOp.IMPL, "\\rightarrow"],
-    [BinaryOp.BIMPL, "\\leftrightarrow"],
+    [BinaryOp.AND, "$\\wedge$"],
+    [BinaryOp.OR, "$\\vee$"],
+    [BinaryOp.IMPL, "$\\rightarrow$"],
+    [BinaryOp.BIMPL, "$\\leftrightarrow$"],
 ]);
 
 function readBinaryOp(input) {
@@ -745,8 +742,8 @@ export const Quantor = {
 };
 
 export const LatexQuantor = new Map([
-    [Quantor.ALL, "\\forall"],
-    [Quantor.EX, "\\exists"]
+    [Quantor.ALL, "$\\forall$"],
+    [Quantor.EX, "$\\exists$"]
 ]);
 
 function readQuantor(input) {
