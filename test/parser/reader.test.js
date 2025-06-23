@@ -20,10 +20,13 @@ const
     lif = (x,y) => new BinarySentence(x, BinaryOp.IMPL, y),
     liff = (x,y) => new BinarySentence(x, BinaryOp.BIMPL, y),
     not = (x) => new UnarySentence(UnaryOp.NEG, x),
-    all = (v,x) => new QuantifiedSentence(Quantor.ALL, v, x),
-    ex = (v,x) => new QuantifiedSentence(Quantor.EX, v, x),
+    all = (v,x) => new QuantifiedSentence(Quantor.ALL, v.name, x),
+    ex = (v,x) => new QuantifiedSentence(Quantor.EX, v.name, x),
     P = ([...xs]) => new Atom("P", xs),
-    x = new Variable("x")
+    Q = ([...xs]) => new Atom("Q", xs),
+    a = new Constant("a"),
+    x = new Variable("x"),
+    y = new Variable("y")
 
 
 const cases = [
@@ -37,7 +40,15 @@ const cases = [
     ["A&(B|C)", and(A,or(B,C))],
     ["A|(B&C)", or(A,and(B,C))],
     ["A|(B|C)", or(A,or(B,C))],
-    ["~?xP(x)", not(ex(x.name,P([x])))]
+    ["!x(P(a)&Q(a))", all(x,and(P([a]),Q([a])))],
+    ["!xP(a)&!xQ(a)", and(all(x,P([a])),all(x,Q([a])))],
+    ["!x?yP(y)", all(x,ex(y,P([y])))],
+    ["?x!yP(y)", ex(x,all(y,P([y])))],
+    ["~?xP(x)", not(ex(x,P([x])))],
+    ["~?x~P(x)", not(ex(x,not(P([x]))))],
+    ["~!x~P(x)", not(all(x,not(P([x]))))],
+    ["~!xP(x)", not(all(x,P([x])))]
+
 ]
 
 describe(`Reader test`, () => {
