@@ -21,7 +21,7 @@ const
     liff = (x,y) => new BinarySentence(x, BinaryOp.BIMPL, y),
     not = (x) => new UnarySentence(UnaryOp.NEG, x),
     all = (v,x) => new QuantifiedSentence(Quantor.ALL, v, x),
-    ex = (v,x) => new QuantifiedSentence(Quantor.Ex, v, x),
+    ex = (v,x) => new QuantifiedSentence(Quantor.EX, v, x),
     P = ([...xs]) => new Atom("P", xs),
     x = new Variable("x")
 
