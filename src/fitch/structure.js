@@ -70,6 +70,9 @@ export class Sentence {
         return false
     }
 
+    get latex(){
+        return this.text
+    }
 }
 
 export class UnarySentence extends Sentence {
@@ -126,6 +129,7 @@ export class UnarySentence extends Sentence {
     get constants(){
         return this.right.constants
     }
+
 }
 
 export class QuantifiedSentence extends Sentence {
