@@ -1,4 +1,7 @@
-import {parse as peggyParse} from './parser.js'
+import {parse as peggyParse, SyntaxError} from './parser.js'
+import ProofLineBox from "../components/ProofLineBox.jsx";
+import * as React from "react";
+import {buttonGroupClasses} from "@mui/material";
 
 export function parse(input) {
     let processed = process(peggyParse(input))
@@ -84,6 +87,14 @@ export class UnarySentence extends Sentence {
         }
     };
 
+    get latex(){
+        if(this.right instanceof Atom || this.right instanceof PropAtoms || this.right instanceof UnarySentence){
+            return LatexUnaryOp[this.op] + this.right.text
+        } else {
+            return `${LatexUnaryOp.get(this.op)}(${this.right.text})`
+        }
+    }
+
     substitute(vari, cons) {
         return new UnarySentence(this.op, this.right.substitute(vari, cons))
     }
@@ -128,6 +139,10 @@ export class QuantifiedSentence extends Sentence {
     get text() {
         return `${this.quant}${this.variable}(${this.right.text})`
     };
+
+    get latex(){
+        return `${LatexQuantor.get(this.quant)}${this.variable.latex}(${this.right.latex})`
+    }
 
     substitute(vari, cons) {
         if (this.variable === vari.name) {
@@ -201,6 +216,13 @@ export class BinarySentence extends Sentence {
             return `${this.left.text}${this.op}${this.right.text}`
     }
 
+    get latex() {
+        if(this.isAssociative)
+            return this.associativeParts.map((x) => x.latex).join(LatexBinaryOp[this.op])
+        else
+            return `${this.left.latex} ${LatexBinaryOp.get(this.op)} ${this.right.latex}`
+    }
+
     substitute(vari, cons) {
         return new BinarySentence(this.left.substitute(vari, cons), this.op, this.right.substitute(vari, cons))
     }
@@ -267,6 +289,10 @@ export class Falsum extends Sentence {
         return '\u22A5';
     }
 
+    get latex() {
+        return '\\bot';
+    }
+
     equals(other) {
         return other instanceof Falsum
     }
@@ -296,6 +322,10 @@ export class Atom extends Sentence {
 
     get text() {
         return `${this.predicate}(${this.terms.map((x) => x.text).join(", ")})`;
+    }
+
+    get latex() {
+        return `${this.predicate}(${this.terms.map((x) => x.latex).join(", ")})`;
     }
 
     substitute(vari, cons) {
@@ -364,6 +394,10 @@ export class PropAtoms extends Sentence {
         return this.name
     }
 
+    get latex() {
+        return this.name
+    }
+
     equals(other){
         return this.name === other.name
     }
@@ -414,6 +448,10 @@ export class FunctionTerm extends Term {
 
     get text() {
         return `${this.fun}(${this.terms.map((x) => x.text).join(", ")})`;
+    }
+
+    get latex() {
+        return `${this.fun}(${this.terms.map((x) => x.latex).join(", ")})`;
     }
 
     substitute(vari, cons) {
@@ -483,6 +521,10 @@ export class Constant extends Term {
     }
 
     get text() {
+        return this.name
+    }
+
+    get latex() {
         return this.name
     }
 
@@ -579,10 +621,78 @@ export class Variable extends Term {
 
 }
 
+export function collateSubproofs(proofLines){
+    let lineElements = []
+    let buffer = []
+    for (let i = 0; i < proofLines.length; i++) {
+        const line = proofLines[i]
+
+        /* Check whether the existing subproof has ended. This can happen in two cases:
+            1) An assuption on the same level
+            2) Any line on a higher level (i.e., lower level index)
+            */
+        if (buffer.length > 0 && ((line.isAssumption && buffer[0].level === line.level) ||  (buffer[0].level > line.level))){
+            lineElements.push([[buffer[0]],collateSubproofs(buffer.slice(1))])
+            buffer = [];
+        }
+
+        if (!line.isAssumption) {
+            if (buffer.length > 0)
+                buffer.push(proofLines[i])
+            else
+                lineElements.push(line)
+        } else {
+            buffer.push(proofLines[i])
+        }
+    }
+    if(buffer.length > 0){
+        lineElements.push([[buffer[0]],collateSubproofs(buffer.slice(1))])
+    }
+    return lineElements
+}
+
+export function generateLatexProof(premises, proofLines, preamble=true){
+
+    const lines = []
+    if(preamble)
+        lines.push("\\begin{fitch}")
+    for(const p of premises){
+        try{
+            lines.push(`\\fj ${p.sentence.latex} \\\\`)
+        } catch(SyntaxError) {
+            lines.push(`\\fj ${p.rawString} \\\\`)
+        }
+
+    }
+    for(const p of proofLines){
+        if(p instanceof Array)
+            for(const sl of generateLatexProof(p[0], p[1], false))
+                lines.push(`\\fa ${sl}`)
+        else{
+            let s = ""
+            try{
+                s = p.sentence.latex
+            } catch(SyntaxError) {
+                s = p.rawString
+            }
+            lines.push(`\\fa ${s} & ${p.justification.latex} \\\\`)
+        }
+    }
+    if(preamble)
+        lines.push("\\end{fitch}")
+    return lines
+}
+
+
+
 
 export const UnaryOp = {
     NEG: "\u00AC",
 };
+
+const LatexUnaryOp = new Map([
+    [UnaryOp.NEG, "\\neg"],
+]);
 
 function readUnaryOp(input) {
     switch (input) {
@@ -597,6 +707,13 @@ export const BinaryOp = {
     IMPL: "\u2192",
     BIMPL: "\u2194"
 };
+
+export const LatexBinaryOp = new Map([
+    [BinaryOp.AND, "\\wedge"],
+    [BinaryOp.OR, "\\vee"],
+    [BinaryOp.IMPL, "\\rightarrow"],
+    [BinaryOp.BIMPL, "\\leftrightarrow"],
+]);
 
 function readBinaryOp(input) {
     switch (input) {
@@ -617,6 +734,11 @@ export const Quantor = {
     EX: "\u2203",
     ALL: "\u2200",
 };
+
+const LatexQuantor = new Map([
+    [Quantor.EX, "\\forall"],
+    [Quantor.ALL, "\\exists"]
+]);
 
 function readQuantor(input) {
     switch (input) {

@@ -33,7 +33,7 @@ export default function SentenceComponent({sentence, updateSentence, error}){
 
 
     return (
-        <Stack direction="column" component="form" sx={{ p: '2px 4px'}}>
+        <Stack direction="column" sx={{ p: '2px 4px'}}>
             <Input sx={{width: "100%"}}
                    size="small"
                    placeholder="Sentence"

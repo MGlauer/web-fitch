@@ -25,4 +25,28 @@ export class Justification {
         this.rule = rule;
         this.lines = lines;
     }
+
+    get prettyReferences(){
+        let s=[]
+        const processed = this.lines.processed
+        if(processed instanceof Array){
+            for(const r of processed){
+                if(r instanceof Array)
+                    s.push(`${r[0]+1}-${r[1]+1}`)
+                else
+                    s.push(r+1)
+            }
+        }
+        return s.join(",")
+    }
+
+    get latex(){
+        if(this.lines)
+            return `${this.rule.label}_{${this.prettyReferences}}`
+        else
+            if(this.rule)
+                return this.rule.label
+            else
+                return ""
+    }
 }
