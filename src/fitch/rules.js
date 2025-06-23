@@ -1,4 +1,4 @@
-import {Atom, BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence} from './structure.js'
+import {BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence, Atom, QuantifiedSentence, Quantor, Constant, Variable} from './structure.js'
 
 function getSubproof(proofLines, start, end) {
     let buffer = [];
@@ -198,6 +198,49 @@ export class IdentityIntro extends Rule {
 
         if(!(target.terms[0].equals(target.terms[1]))){
             throw new RuleError("Left hand side does not equal right hand side.")
+        }
+    }
+}
+
+export class AllElim extends Rule {
+
+    static label = "\u2200-Elim";
+    static {
+        register(this);
+    }
+
+    static _check(references, target) {
+        if (references.length !== 1) {
+            throw new RuleError('Rule must be applied to one line.');
+        }
+
+        const quantSen = references[0];
+
+        if (!(quantSen instanceof QuantifiedSentence)) {
+            throw new RuleError('The formula being referenced must be a quantified sentence.');
+        }
+
+        if(!(quantSen.quant === Quantor.ALL)){
+            throw new RuleError('The formula being referenced must have an universal quantifier.');
+        }
+
+        const s = "The derived formula does not match the referenced formula when replacing all variables: "
+
+        const rawSubs = quantSen.right.unify(target)
+        if(rawSubs === null)
+            throw new RuleError(s + "The formulas do not follow the same pattern.")
+        const subs = (new Set(rawSubs)).entries();
+
+        if(subs.length > 1)
+            throw new RuleError(s + "Too many substitutions")
+        else{
+            if(subs.length === 1){
+                if (subs[0][0] !== quantSen.variable)
+                    throw new RuleError(s + `Wrong variable in substitution (found: ${subs[0][0]}, expected: ${quantSen.variable})`)
+
+                if (!quantSen.right.substitute(new Variable(quantSen.variable), new Constant(subs[0][1])).equals(target))
+                    throw new RuleError(s + `Target cannot be derived from referenced line`)
+            }
         }
     }
 }
