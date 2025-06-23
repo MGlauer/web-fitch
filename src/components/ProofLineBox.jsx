@@ -1,6 +1,6 @@
 import {parse} from "../fitch/structure.js";
 import {Justification, SentenceLine} from "../fitch/proofstructure.js";
-import {Rule} from "../fitch/rules.js";
+import {rules, introRules, elimRules, miscRules} from "../fitch/rules.js";
 import Grid from "@mui/material/Grid";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
@@ -11,7 +11,7 @@ import Tooltip from "@mui/material/Tooltip";
 import ErrorIcon from "@mui/icons-material/Error";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import CheckIcon from "@mui/icons-material/Check";
-import {IconButton} from "@mui/material";
+import {IconButton, ListSubheader} from "@mui/material";
 import Menu from "@mui/material/Menu";
 import SentenceComponent from "./SentenceComponent.jsx";
 
@@ -94,7 +94,7 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
     }
 
     const handleSelectChange = (event) => {
-        const newJustification = new Justification(Rule.derived[event.target.value], sentenceLine.justification.lines)
+        const newJustification = new Justification(rules.get(event.target.value), sentenceLine.justification.lines)
         updateFun(new SentenceLine(sentenceLine.rawString, newJustification, sentenceLine.level, sentenceLine.isAssumption, sentenceLine.parseError, null, sentenceLine.newConstant));
     };
 
@@ -108,13 +108,17 @@ export default function ProofLineBox({lineNum, line, removeLine, addLineAfter, a
     if (!sentenceLine.isAssumption) {
         justForm = [
             (<Grid size={2}>
-                <Select
-                    onChange={handleSelectChange}
-                    label="Rule"
-                    value={sentenceLine.justification.rule.label}
-                    variant="standard">
-                    {Object.keys(Rule.derived).filter((x) => x!=="Assumption").map((x) => (<MenuItem value={x}>{x}</MenuItem>))}
-                </Select>
+                    <Select
+                        onChange={handleSelectChange}
+                        label="Rule"
+                        value={sentenceLine.justification.rule.label}
+                        variant="standard">
+                        {[...miscRules.keys()].map((x) => (<MenuItem value={x}>{x}</MenuItem>))}
+                        <ListSubheader>Intro</ListSubheader>
+                        {[...introRules.keys()].map((x) => (<MenuItem value={x}>{x}</MenuItem>))}
+                        <ListSubheader>Elim</ListSubheader>
+                        {[...elimRules.keys()].map((x) => (<MenuItem value={x}>{x}</MenuItem>))}
+                    </Select>
             </Grid>),
             (<Grid size={1}>
                 <TextField variant="filled" onChange={handleLinesChange}

@@ -42,10 +42,10 @@ export class Justification {
 
     get latex(){
         if(this.lines)
-            return `${this.rule.label}_{${this.prettyReferences}}`
+            return `${this.rule.latex}_{${this.prettyReferences}}`
         else
             if(this.rule)
-                return this.rule.label
+                return this.rule.latex
             else
                 return ""
     }

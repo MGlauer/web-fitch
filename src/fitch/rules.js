@@ -1,4 +1,19 @@
-import {Atom, BinaryOp, BinarySentence, Falsum, Sentence, UnaryOp, UnarySentence, QuantifiedSentence, Quantor, Constant, Variable} from './structure.js'
+import {
+    Atom,
+    BinaryOp,
+    BinarySentence,
+    Falsum,
+    Sentence,
+    UnaryOp,
+    UnarySentence,
+    QuantifiedSentence,
+    Quantor,
+    Constant,
+    Variable,
+    LatexBinaryOp,
+    LatexUnaryOp,
+    LatexQuantor
+} from './structure.js'
 
 function getSubproof(proofLines, start, end) {
     let buffer = [];
@@ -101,9 +116,18 @@ function printLines(lines){
     return parts.join(",")
 }
 
-export class Rule {
+class Rule {
     static derived = [];
-    static label = "";
+    static operator = "";
+    static type = "";
+
+    static get label(){
+        return `${this.operator}-${this.type}`
+    };
+
+    static get latex(){
+        return this.label
+    }
 
     static check(proof, lines, target, target_line, premiseEnd) {
         const targetSentenceLine = proof[target_line]
@@ -122,6 +146,30 @@ export class Rule {
 
     static _check(references, target) {
         throw new Error("Not implemented")
+    }
+}
+
+class BinaryRule extends  Rule{
+    static get latex(){
+        return `${LatexBinaryOp.get(this.operator)}-${this.type}`
+    }
+}
+
+class UnaryRule  extends  Rule{
+    static get latex(){
+        return `${LatexUnaryOp.get(this.operator)}-${this.type}`
+    }
+}
+
+class QuantorRule extends  Rule {
+    static get latex(){
+        return `${LatexQuantor.get(this.operator)}-${this.type}`
+    }
+}
+
+class PureRule extends  Rule {
+    static get latex(){
+        return `${this.operator}-${this.type}`
     }
 }
 
@@ -172,20 +220,17 @@ function assertLine(ref){
 
 export class Assumption extends Rule {
     static label = "Assumption";
-    static {
-        register(this);
-    }
+    static type = "Assumption"
+
 
     static _check(references, target) {
     }
 }
 
-export class ExistenceIntro extends Rule {
-    static label = "\u2203-Intro";
-
-    static {
-        register(this);
-    }
+export class ExistenceIntro extends QuantorRule {
+    static operator = Quantor.EX
+    static type = "Intro"
+    
 
     static _check(references, target) {
         if (references.length !== 1) {
@@ -224,11 +269,10 @@ export class ExistenceIntro extends Rule {
 
 }
 
-export class IdentityElim extends Rule {
-    static label = "\u003D-Elim";
-    static {
-        register(this);
-    }
+export class IdentityElim extends PureRule {
+    static operator = "\u003D"
+    static type = "Elim"
+    
 
     static _check(references, target){
         if(references.length !== 2){
@@ -250,11 +294,10 @@ export class IdentityElim extends Rule {
 }
 
 // Id: Identity of variable
-export class IdentityIntro extends Rule {
-    static label = "\u003D-Intro";
-    static {
-        register(this);
-    }
+export class IdentityIntro extends PureRule {
+    static operator = "\u003D"
+    static type = "Intro"
+    
 
     static _check(references, target){
         if(references.length > 0){
@@ -271,12 +314,11 @@ export class IdentityIntro extends Rule {
     }
 }
 
-export class ExistsElim extends Rule {
+export class ExistsElim extends QuantorRule {
 
-    static label = "\u2203-Elim";
-    static {
-        register(this);
-    }
+    static operator = Quantor.EX
+    static type = "Elim"
+    
 
     static _check(references, target, introducedConstant) {
         if (references.length !== 2) {
@@ -324,12 +366,11 @@ export class ExistsElim extends Rule {
     }
 }
 
-export class AllIntro extends Rule {
+export class AllIntro extends QuantorRule {
 
-    static label = "\u2200-Intro";
-    static {
-        register(this);
-    }
+    static operator = Quantor.ALL
+    static type = "Intro"
+    
 
     static _check(references, target, introducedConstant) {
         if (references.length !== 1 && references[0] instanceof Array) {
@@ -368,12 +409,11 @@ export class AllIntro extends Rule {
     }
 }
 
-export class AllElim extends Rule {
+export class AllElim extends QuantorRule {
 
-    static label = "\u2200-Elim";
-    static {
-        register(this);
-    }
+    static operator = Quantor.ALL
+    static type = "Elim"
+    
 
     static _check(references, target) {
         if (references.length !== 1) {
@@ -414,9 +454,11 @@ export class AllElim extends Rule {
 // Reit: Reiteration of line
 export class Reiteration extends Rule {
 
-    static label = "Reit";
-    static {
-        register(this);
+    static type = "Reit"
+
+
+    static get label(){
+        return "Reit"
     }
 
     static _check(references, target) {
@@ -431,11 +473,10 @@ export class Reiteration extends Rule {
 }
 
 // &I: Conjunction Introduction
-export class ConjunctionIntro extends Rule {
-    static label = "\u2227-Intro";
-    static {
-        register(this);
-    }
+export class ConjunctionIntro extends BinaryRule {
+    static operator = BinaryOp.AND
+    static type = "Intro"
+    
 
     static _check(references, target) {
         if (references.length < 2) {
@@ -471,11 +512,10 @@ export class ConjunctionIntro extends Rule {
 }
 
 // &E: Conjunction Elimination
-export class ConjunctionElim extends Rule {
-    static label = "\u2227-Elim";
-    static {
-        register(this);
-    }
+export class ConjunctionElim extends BinaryRule {
+    static operator = BinaryOp.AND
+    static type = "Elim"
+    
 
     static _check(references, target) {
         if (references.length !== 1) {
@@ -499,11 +539,10 @@ export class ConjunctionElim extends Rule {
 
 
 // >I: Conditional Introduction
-export class ConditionalIntro extends Rule {
-    static label = "\u2192-Intro";
-    static {
-        register(this);
-    }
+export class ConditionalIntro extends BinaryRule {
+    static operator = BinaryOp.IMPL
+    static type = "Intro"
+    
 
     static _check(references, target) {
         if (!(references.length === 1)) {
@@ -530,12 +569,11 @@ export class ConditionalIntro extends Rule {
 }
 
 // >E: Conditional Elimination
-export class ConditionalElim extends Rule {
+export class ConditionalElim extends BinaryRule {
 
-    static label = "\u2192-Elim";
-    static {
-        register(this);
-    }
+    static operator = BinaryOp.IMPL
+    static type = "Elim"
+    
 
     static _check(references, target) {
         if (references.length !== 2) {
@@ -559,12 +597,11 @@ export class ConditionalElim extends Rule {
 }
 
 // vI: Disjunction Introduction
-export class DisjunctionIntro extends Rule {
+export class DisjunctionIntro extends BinaryRule {
 
-    static label = "\u2228-Intro";
-    static {
-        register(this);
-    }
+    static operator = BinaryOp.OR
+    static type = "Intro"
+    
 
     static _check(references, target) {
 
@@ -586,12 +623,11 @@ export class DisjunctionIntro extends Rule {
 }
 
 // vE: Disjunction Elimination
-export class DisjunctionElim extends Rule {
+export class DisjunctionElim extends BinaryRule {
 
-    static label = "\u2228-Elim";
-    static {
-        register(this);
-    }
+    static operator = BinaryOp.OR
+    static type = "Elim"
+    
 
     static _check(references, target) {
 
@@ -637,12 +673,11 @@ export class DisjunctionElim extends Rule {
 }
 
 // ~I: Negation Introduction
-export class NegationIntro extends Rule {
+export class NegationIntro extends UnaryRule {
 
-    static label = String.fromCharCode(172) + "-Intro";
-    static {
-        register(this);
-    }
+    static operator = UnaryOp.NEG
+    static type = "Intro"
+    
 
     static _check(references, target) {
         if (references.length !== 1) {
@@ -667,12 +702,11 @@ export class NegationIntro extends Rule {
 }
 
 // ~E: Negation Elimination (formerly Double Negation Elimination)
-export class NegationElim extends Rule {
+export class NegationElim extends UnaryRule {
 
-    static label = String.fromCharCode(172) + "-Elim";
-    static {
-        register(this);
-    }
+    static operator = UnaryOp.NEG
+    static type = "Elim"
+    
     static _check(references, target) {
         if (references.length !== 1) {
             throw new RuleError("Rule must be applied to one line.");
@@ -692,12 +726,11 @@ export class NegationElim extends Rule {
 }
 
 // #I: Falsum/Absurdity Introduction (formerly Negation Elimination)
-export class FalsumIntro extends Rule {
+export class FalsumIntro extends PureRule {
 
-    static label = "\u22A5-Intro";
-    static {
-        register(this);
-    }
+    static operator = "\u22A5"
+    static type = "Intro"
+    
 
     static _check(references, target) {
         if (references.length !== 2) {
@@ -722,12 +755,11 @@ export class FalsumIntro extends Rule {
 
 
 // EFQ: Ex Falso Quodlibet
-export class FalsumElim extends Rule {
+export class FalsumElim extends PureRule {
 
-    static label = "\u22A5-Elim";
-    static {
-        register(this);
-    }
+    static operator = "\u22A5"
+    static type = "Elim"
+
 
     static _check(references, target) {
         if (references.length !== 1) {
@@ -743,12 +775,11 @@ export class FalsumElim extends Rule {
 }
 
 // <>I: Biconditional Introduction
-export class BiconditionalIntro extends Rule {
+export class BiconditionalIntro extends BinaryRule {
 
-    static label = "\u2194-Intro";
-    static {
-        register(this);
-    }
+    static operator = BinaryOp.BIMPL
+    static type = "Intro"
+
 
     static _check(references, target) {
         if (references.length !== 2) {
@@ -779,12 +810,11 @@ export class BiconditionalIntro extends Rule {
 }
 
 //<>E: Biconditional Elimination
-export class BiconditionalElim extends Rule {
+export class BiconditionalElim extends BinaryRule {
 
-    static label = "\u2194-Elim";
-    static {
-        register(this);
-    }
+    static operator = BinaryOp.BIMPL
+    static type = "Elim"
+    
 
     static _check(references, target) {
         if (references.length !== 2) {
@@ -804,22 +834,7 @@ export class BiconditionalElim extends Rule {
     }
 }
 
-/*
-//!E: Universal Elimination
-export class UniversalElim extends Rule {
-    static {
-        register(this);
-    }
-    static label = "\u2200-Elim";
-
-    static _check(references, target) {
-        if (references.length !== 1) {
-            throw new RuleError("Rule must be applied to a single lines.");
-        }
-
-        const sub = references[0];
-        assertSubproof(sub)
-        const a = sub[0]
-
-    }
-}*/
+export const introRules = new Map([ConjunctionIntro, DisjunctionIntro, NegationIntro, ConditionalIntro, BiconditionalIntro, FalsumIntro, IdentityIntro, ExistenceIntro, AllIntro].map((x)=> [x.label,x]));
+export const elimRules = new Map([ConjunctionElim, DisjunctionElim, NegationElim, ConditionalElim, BiconditionalElim, FalsumElim, IdentityElim, ExistsElim, AllElim].map((x)=>[x.label,x]))
+export const miscRules = new Map([Reiteration].map((x)=>[x.label,x]))
+export const rules = new Map([...introRules, ...elimRules, ...miscRules])

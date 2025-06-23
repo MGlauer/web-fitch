@@ -145,7 +145,7 @@ export class QuantifiedSentence extends Sentence {
     };
 
     get latex(){
-        return `${LatexQuantor.get(this.quant)}${this.variable.latex}(${this.right.latex})`
+        return `${LatexQuantor.get(this.quant)}~${this.variable}(${this.right.latex})`
     }
 
     substitute(vari, cons) {
@@ -222,7 +222,7 @@ export class BinarySentence extends Sentence {
 
     get latex() {
         if(this.isAssociative)
-            return this.associativeParts.map((x) => x.latex).join(LatexBinaryOp[this.op])
+            return this.associativeParts.map((x) => x.latex).join( ` ${LatexBinaryOp.get(this.op)} `)
         else
             return `${this.left.latex} ${LatexBinaryOp.get(this.op)} ${this.right.latex}`
     }
@@ -414,6 +414,10 @@ export class PropAtoms extends Sentence {
 export class Term {
     get text() {
         return this //throw "Not implemented"
+    }
+
+    get latex(){
+        return this.text
     }
 
     equals(other){
@@ -615,6 +619,7 @@ export class Variable extends Term {
         return this.name
     }
 
+
     get freeVariables(){
         return new Set([this.name])
     }
@@ -694,7 +699,7 @@ export const UnaryOp = {
     NEG: "\u00AC",
 };
 
-const LatexUnaryOp = new Map([
+export const LatexUnaryOp = new Map([
     [UnaryOp.NEG, "\\neg"],
 ]);
 
@@ -739,9 +744,9 @@ export const Quantor = {
     ALL: "\u2200",
 };
 
-const LatexQuantor = new Map([
-    [Quantor.EX, "\\forall"],
-    [Quantor.ALL, "\\exists"]
+export const LatexQuantor = new Map([
+    [Quantor.ALL, "\\forall"],
+    [Quantor.EX, "\\exists"]
 ]);
 
 function readQuantor(input) {
