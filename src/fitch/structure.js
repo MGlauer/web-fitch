@@ -663,10 +663,14 @@ export function generateLatexProof(premises, proofLines, preamble=true){
     if(preamble)
         lines.push("\\begin{fitch}")
     for(const p of premises){
+        let c = ""
+        if(p.newConstant){
+            c = `\\fbox{${p.newConstant}}`
+        }
         try{
-            lines.push(`\\fj ${p.sentence.latex} \\\\`)
+            lines.push(`\\fj ${c}${p.sentence.latex} \\\\`)
         } catch(SyntaxError) {
-            lines.push(`\\fj ${p.rawString} \\\\`)
+            lines.push(`\\fj ${c}${p.rawString} \\\\`)
         }
 
     }
