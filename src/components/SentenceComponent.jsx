@@ -53,6 +53,8 @@ export default function SentenceComponent({sentence, updateSentence, error}){
                 {CharButton("\u00AC")}
                 {CharButton("\u22A5")}
                 {CharButton("\u003D")}
+                {CharButton("\u2200")}
+                {CharButton("\u2203")}
             </ButtonGroup>):<></>}
             <FormHelperText error={true}>{error}</FormHelperText>
         </Stack>)
