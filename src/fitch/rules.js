@@ -132,7 +132,7 @@ class Rule {
     static check(proof, lines, target, target_line, premiseEnd) {
         const targetSentenceLine = proof[target_line]
         try{
-            if(lines.length === 0 && !(targetSentenceLine.justification.rule === IdentityIntro) && !(targetSentenceLine.justification.rule === Assumption)){
+            if((lines == null || lines.length === 0) && !(targetSentenceLine.justification.rule === IdentityIntro) && !(targetSentenceLine.justification.rule === Assumption)){
                 throw new RuleError("No referenced lines")
             }
             targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target, findConstantIntro(proof, lines))
