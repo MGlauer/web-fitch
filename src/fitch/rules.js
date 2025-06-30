@@ -93,8 +93,8 @@ function findConstantIntro(proofLines, references, premiseEnd){
             const c = proofLines[reference[0]].newConstant
             if(c !== null)
                 for(let i = 0; i<reference[0]; i++){
-                    if(isAvailable(proofLines, i, reference[0], premiseEnd) && proofLines[i].constants.has(c))
-                        throw RuleError("Constant introduces in subproof must be new.")
+                    if(isAvailable(proofLines, i, reference[0], premiseEnd) && proofLines[i].sentence.constants.has(c))
+                        throw new RuleError("Constant introduced in subproof must be new.")
                 }
                 intros.push(c)
         }
@@ -135,7 +135,7 @@ class Rule {
             if((lines == null || lines.length === 0) && !(targetSentenceLine.justification.rule === IdentityIntro) && !(targetSentenceLine.justification.rule === Assumption)){
                 throw new RuleError("No referenced lines")
             }
-            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target, findConstantIntro(proof, lines))
+            targetSentenceLine.justification.rule._check(lines.map((x) => resolveReference(proof, x, target_line, premiseEnd)), target, findConstantIntro(proof, lines, premiseEnd))
         } catch (error) {
             if(error instanceof RuleError){
                 error.message =  `[ERROR applying ${targetSentenceLine.justification.rule.label} to lines ${lines?printLines(lines):lines}]: ${error.message}`

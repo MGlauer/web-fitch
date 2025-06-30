@@ -2,10 +2,10 @@ import {describe, expect, it} from "vitest";
 import {RuleError, Assumption} from "../../src/fitch/rules.js";
 import {Justification, SentenceLine} from "../../src/fitch/proofstructure.js";
 
-function constructLine([text, rule, refs], level){
+function constructLine([text, rule, refs, cons=null], level){
     console.log([text, rule, refs, rule === Assumption])
     let jus = new Justification(rule, {processed:refs})
-    return new SentenceLine(text, jus, level, rule === Assumption)
+    return new SentenceLine(text, jus, level, rule === Assumption, null, null, cons)
 }
 
 
@@ -24,11 +24,26 @@ function constructProof(proof, level){
 }
 
 
-export function validProofTest([premises, proofLines]){
+export function invalidProofTest([premises, proofLines]){
     const premisesEnd = premises.length
 
     let proof = constructProof(premises.concat(proofLines), 0)
     describe(`invalid {${proof.slice(0,premisesEnd).join(", ")}} |- ${proof[proof.length-1]}`, () => {
+        it(`${premises} |- ${proofLines}`, () => {
+            expect(()=> {for(let i=premisesEnd; i<proof.length; i++){
+            const sentenceLine=proof[i]
+            sentenceLine.check(proof, i, premisesEnd)
+            }}).toThrowError(RuleError);
+        })
+    });
+
+}
+
+export function validProofTest([premises, proofLines]){
+    const premisesEnd = premises.length
+
+    let proof = constructProof(premises.concat(proofLines), 0)
+    describe(`{${proof.slice(0,premisesEnd).join(", ")}} |- ${proof[proof.length-1]}`, () => {
         for(let i=premisesEnd; i<proof.length; i++){
             const sentenceLine=proof[i]
             it(`${sentenceLine.sentence} ${sentenceLine.justification.rule.label} ${sentenceLine.justification.rule.lines}`, () => {
@@ -36,5 +51,4 @@ export function validProofTest([premises, proofLines]){
             });
         }
     });
-
 }
