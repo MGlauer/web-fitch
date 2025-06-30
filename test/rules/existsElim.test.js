@@ -15,6 +15,7 @@ const invalidTestcases = [
     [["?xP(x)",["Q(a)","Q(b)"]], "Q(b)", "a"],
     [["?xP(x)",["P(a)","Q(a)"]], "Q(a)", "a"],
     [["?xP(x)",["P(a)","Q(b)"]], "Q(a)", "a"],
+    [["?xP(x,x)",["P(a,a)","Q(b,a)"]], "Q(a)", "a"],
 ]
 
 invalidRuleTestWithParser(ExistsElim, invalidTestcases)

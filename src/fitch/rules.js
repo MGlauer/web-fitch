@@ -406,6 +406,9 @@ export class AllIntro extends QuantorRule {
                     throw new RuleError(s + `Target cannot be derived from referenced line`)
             }
         }
+
+        if(target.constants.has(introducedConstant))
+            throw new RuleError(`Target line must not contain local constant ${introducedConstant}.`)
     }
 }
 
